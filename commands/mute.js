@@ -1,57 +1,44 @@
-module.exports = {
-    name: "mute",
-    description: "Mute a user (adds 'Muted' role).",
 const { EmbedBuilder, PermissionsBitField } = require("discord.js");
+const ms = require("ms");
 
 module.exports = {
   name: "mute",
-  description: "Mute a user in the server.",
+  description: "Mute a user for a specified duration.",
   async execute(message, args) {
-    // Vérifie les permissions
-    if (!message.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) {
-      return message.reply("❌ Tu n’as pas la permission de mute des membres.");
+    if (!message.member.permissions.has(PermissionsBitField.Flags.MuteMembers)) {
+      return message.reply("❌ You don’t have permission to mute members.");
     }
 
-    // Vérifie si un utilisateur est mentionné
     const user = message.mentions.users.first();
-    if (!user) {
-      return message.reply("⚠️ Tu dois mentionner un utilisateur à mute.");
-    }
+    if (!user) return message.reply("⚠️ You must mention a user to mute.");
 
-    // Récupère le membre dans le serveur
     const member = message.guild.members.cache.get(user.id);
-    if (!member) {
-      return message.reply("❌ Cet utilisateur n’est pas dans le serveur.");
-    }
+    if (!member) return message.reply("❌ That user is not in this server.");
 
-    // Empêche de mute un admin
-    if (member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      return message.reply("⚠️ Tu ne peux pas mute un administrateur !");
-    }
+    const duration = args[1];
+    if (!duration) return message.reply("⏱️ Please specify a mute duration (e.g. `10m`, `1h`, `1d`).");
 
-    // Vérifie la durée (ex: +mute @user 10m)
-    const durationArg = args[1];
-    const durationMs = durationArg
-      ? require("ms")(durationArg)
-      : 10 * 60 * 1000; // Par défaut : 10 minutes
+    const time = ms(duration);
+    if (!time) return message.reply("⚠️ Invalid time format. Use `s`, `m`, `h`, or `d`.");
 
-    if (!durationMs) {
-      return message.reply("⚠️ Spécifie une durée valide (ex: `+mute @user 10m`).");
-    }
+    const role = message.guild.roles.cache.find(r => r.name === "Muted");
+    if (!role) return message.reply("⚠️ No 'Muted' role found. Please create one.");
 
-    try {
-      await member.timeout(durationMs, `Muté par ${message.author.tag}`);
+    await member.roles.add(role);
 
-      const embed = new EmbedBuilder()
-        .setColor("Orange")
-        .setTitle("🔇 Membre Muté")
-        .setDescription(`**${user.tag}** a été muté pendant **${args[1] || "10m"}** par **${message.author.tag}**.`)
-        .setTimestamp();
+    const embed = new EmbedBuilder()
+      .setColor("Orange")
+      .setTitle("🔇 Member Muted")
+      .setDescription(`**${user.tag}** has been muted for **${duration}** by **${message.author.tag}**`)
+      .setTimestamp();
 
-      await message.channel.send({ embeds: [embed] });
-    } catch (err) {
-      console.error(err);
-      message.reply("❌ Une erreur est survenue lors du mute.");
-    }
+    message.channel.send({ embeds: [embed] });
+
+    setTimeout(async () => {
+      if (member.roles.cache.has(role.id)) {
+        await member.roles.remove(role);
+        message.channel.send(`✅ **${user.tag}** has been automatically unmuted.`);
+      }
+    }, time);
   },
 };
