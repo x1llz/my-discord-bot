@@ -1,18 +1,15 @@
 {
   "name": "hellz-bot",
   "version": "1.0.0",
-  "description": "Hellz Discord Bot with web dashboard and dynamic status.",
+  "description": "Hellz Discord Bot with Website Dashboard",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "dependencies": {
-    "discord.js": "^14.15.3",
-    "dotenv": "^16.3.1",
-    "express": "^4.19.2",
-    "ejs": "^3.1.10"
+    "discord.js": "^14.16.3",
+    "express": "^4.21.1",
+    "ejs": "^3.1.10",
+    "dotenv": "^16.4.5"
   }
 }

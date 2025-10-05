@@ -1,36 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hellz Bot Dashboard</title>
-  <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= botName %> - Official Bot</title>
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <div class="container">
-    <header>
-      <img src="/images/hellz.gif" alt="Hellz Bot Logo" class="logo">
-      <h1>🔥 Hellz Bot Dashboard</h1>
-      <p>Your all-in-one Discord assistant — moderation, fun & style 😎</p>
-      <a href="https://discord.gg/hellz" class="invite-btn">Join the Hellz Community</a>
-    </header>
+    <img src="/images/hellz.gif.gif" alt="Hellz Logo" class="logo" />
+    <h1>🔥 Welcome to <%= botName %> 🔥</h1>
+    <p>The most stylish and powerful Discord bot for your server.</p>
 
-    <main>
-      <section class="info">
-        <h2>Bot Status</h2>
-        <p>✅ Online and running smoothly on <strong>Render</strong>.</p>
-        <p>Made with ❤️ by <strong>X1LLZ</strong></p>
-      </section>
+    <div class="buttons">
+      <a href="https://discord.gg/hellz" class="btn invite">Join our Discord</a>
+      <a href="https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot&permissions=8" class="btn add">Invite the Bot</a>
+    </div>
 
-      <section class="commands">
-        <h2>Available Commands</h2>
-        <ul>
-          <% commands.forEach(cmd => { %>
-            <li><strong>+<%= cmd.name %></strong> — <%= cmd.description || "No description provided." %></li>
-          <% }) %>
-        </ul>
-      </section>
-    </main>
+    <footer>Made with ❤️ by X1LLZ</footer>
   </div>
 </body>
 </html>

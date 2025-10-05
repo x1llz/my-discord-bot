@@ -12,7 +12,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildPresences, // ✅ nécessaire pour afficher les statuts
+    GatewayIntentBits.GuildPresences,
   ],
 });
 
@@ -35,7 +35,7 @@ for (const file of commandFiles) {
 }
 
 // === ÉVÉNEMENT READY ===
-client.once("ready", () => {
+client.once("clientReady", () => {
   console.log(`🤖 Connecté en tant que ${client.user.tag}`);
   console.log("🌐 Web server running");
   console.log("🔥 Hellz Bot is now operational — made by X1LLZ");
@@ -55,12 +55,14 @@ client.once("ready", () => {
     { name: "Minecraft", type: ActivityType.Playing },
     { name: "Valorant", type: ActivityType.Playing },
     { name: "anime openings 🎧", type: ActivityType.Listening },
+    { name: "k-pop hits 💃", type: ActivityType.Listening },
     { name: "One Piece 🏴‍☠️", type: ActivityType.Watching },
     { name: "Spy x Family 💚", type: ActivityType.Watching },
     { name: "debugging bugs 🐛", type: ActivityType.Playing },
     { name: "coding kawaii scripts 💻", type: ActivityType.Playing },
     { name: "reading manga 📖", type: ActivityType.Watching },
     { name: "lofi beats 🎶", type: ActivityType.Listening },
+    { name: "Twitch streamers 🎥", type: ActivityType.Watching },
     { name: "protecting senpai 💞", type: ActivityType.Playing },
     { name: "being adorable 💖", type: ActivityType.Playing },
     { name: "uwu noises 🌸", type: ActivityType.Playing },
@@ -93,21 +95,17 @@ client.on("messageCreate", async message => {
   }
 });
 
-// === SERVEUR EXPRESS (pour le site du bot) ===
+// === SERVEUR EXPRESS (pour le site) ===
 const app = express();
-
-// Configuration EJS et fichiers statiques
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static("public"));
 
-// Page principale
 app.get("/", (req, res) => {
-  const commandsList = Array.from(client.commands.values());
-  res.render("index", { commands: commandsList });
+  res.render("index", { botName: client.user ? client.user.username : "Hellz Bot" });
 });
 
-// Page de test (optionnelle)
-app.get("/ping", (req, res) => res.send("🏓 Hellz Bot is alive!"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🌍 Web server actif sur Render (port ${PORT})`));
 
-// === LA
+// === CONNEXION DU BOT ===
+client.login(process.env.TOKEN).catch(err => console.error("❌ Erreur de connexion :", err));
