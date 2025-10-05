@@ -1,18 +1,15 @@
 {
-  "name": "monbot",
+  "name": "hellz-bot",
   "version": "1.0.0",
-  "description": "Bot Discord hébergé sur Render",
+  "description": "Hellz Discord bot — made by X1LLZ",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "axios": "^1.6.2",
-    "discord.js": "^14.13.0",
-    "dotenv": "^16.3.1",
-    "express": "^4.19.2"
-  },
-  "engines": {
-    "node": ">=18.x"
+    "axios": "^1.7.0",
+    "discord.js": "^14.16.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1"
   }
 }
