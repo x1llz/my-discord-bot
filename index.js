@@ -12,7 +12,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildPresences, // ✅ nécessaire pour afficher le statut
+    GatewayIntentBits.GuildPresences, // ✅ nécessaire pour afficher les statuts
   ],
 });
 
@@ -28,21 +28,24 @@ for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
   if (command.name && command.execute) {
     client.commands.set(command.name, command);
-    console.log(`✅ Command loaded: ${command.name}`);
+    console.log(`✅ Commande chargée : ${command.name}`);
   } else {
-    console.log(`⚠️ Command ignored: ${file}`);
+    console.log(`⚠️ Commande ignorée : ${file}`);
   }
 }
 
 // === ÉVÉNEMENT READY ===
 client.once("ready", () => {
-  console.log(`🤖 Logged in as ${client.user.tag}`);
+  console.log(`🤖 Connecté en tant que ${client.user.tag}`);
+  console.log("🌐 Web server running");
   console.log("🔥 Hellz Bot is now operational — made by X1LLZ");
 
   // === STATUT INITIAL ===
   client.user.setPresence({
     status: "online",
-    activities: [{ name: "discord.gg/hellz 🌐", type: ActivityType.Watching }],
+    activities: [
+      { name: "discord.gg/hellz 🌐", type: ActivityType.Watching }
+    ],
   });
 
   // === STATUTS ROTATIFS ===
@@ -52,7 +55,6 @@ client.once("ready", () => {
     { name: "Minecraft", type: ActivityType.Playing },
     { name: "Valorant", type: ActivityType.Playing },
     { name: "anime openings 🎧", type: ActivityType.Listening },
-    { name: "k-pop hits 💃", type: ActivityType.Listening },
     { name: "One Piece 🏴‍☠️", type: ActivityType.Watching },
     { name: "Spy x Family 💚", type: ActivityType.Watching },
     { name: "debugging bugs 🐛", type: ActivityType.Playing },
@@ -87,38 +89,25 @@ client.on("messageCreate", async message => {
     await command.execute(message, args);
   } catch (err) {
     console.error(err);
-    message.reply("⚠️ An error occurred while executing this command!");
+    message.reply("⚠️ Une erreur est survenue lors de l'exécution de cette commande !");
   }
 });
 
-// === SERVEUR EXPRESS (pour Render + site web) ===
+// === SERVEUR EXPRESS (pour le site du bot) ===
 const app = express();
+
+// Configuration EJS et fichiers statiques
 app.set("view engine", "ejs");
-app.use(express.static("public"));
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static(path.join(__dirname, "public")));
 
-// === PAGE D’ACCUEIL ===
+// Page principale
 app.get("/", (req, res) => {
-  res.render("index", {
-    botName: "Hellz",
-    botDesc:
-      "Hellz is a powerful, stylish Discord bot that mixes moderation, entertainment, and anime vibes — always online, always ready to serve 💫",
-    inviteLink:
-      "https://discord.com/oauth2/authorize?client_id=TON_ID_DU_BOT&permissions=8&scope=bot",
-    supportServer: "https://discord.gg/jyNXRJPMPm",
-  });
+  const commandsList = Array.from(client.commands.values());
+  res.render("index", { commands: commandsList });
 });
 
-// === PAGE DES COMMANDES ===
-app.get("/commands", (req, res) => {
-  const commands = Array.from(client.commands.keys());
-  res.render("commands", { commands });
-});
+// Page de test (optionnelle)
+app.get("/ping", (req, res) => res.send("🏓 Hellz Bot is alive!"));
 
-// === ROUTE DE STATUT (ping pour Render) ===
-app.get("/status", (req, res) => res.send("✅ Hellz Bot is running perfectly!"));
-
-// === SERVEUR WEB ===
-app.listen(3000, () => console.log("🌍 Web server active on port 3000"));
-
-// === CONNEXION DU BOT ===
-client.login(process.env.TOKEN);
+// === LA

@@ -1,19 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title><%= botName %> | Discord Bot</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hellz Bot Dashboard</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <div class="container">
-    <h1>🤖 <%= botName %></h1>
-    <p><%= botDesc %></p>
-    <div class="buttons">
-      <a href="<%= inviteLink %>" class="btn">Invite Bot</a>
-      <a href="<%= supportServer %>" class="btn">Support Server</a>
-      <a href="/commands" class="btn">View Commands</a>
-    </div>
+    <header>
+      <img src="/images/hellz.gif" alt="Hellz Bot Logo" class="logo">
+      <h1>🔥 Hellz Bot Dashboard</h1>
+      <p>Your all-in-one Discord assistant — moderation, fun & style 😎</p>
+      <a href="https://discord.gg/hellz" class="invite-btn">Join the Hellz Community</a>
+    </header>
+
+    <main>
+      <section class="info">
+        <h2>Bot Status</h2>
+        <p>✅ Online and running smoothly on <strong>Render</strong>.</p>
+        <p>Made with ❤️ by <strong>X1LLZ</strong></p>
+      </section>
+
+      <section class="commands">
+        <h2>Available Commands</h2>
+        <ul>
+          <% commands.forEach(cmd => { %>
+            <li><strong>+<%= cmd.name %></strong> — <%= cmd.description || "No description provided." %></li>
+          <% }) %>
+        </ul>
+      </section>
+    </main>
   </div>
-  <footer>Made by X1LLZ 💻</footer>
 </body>
 </html>
