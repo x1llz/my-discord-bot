@@ -5,14 +5,14 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-// === INITIALISATION DU CLIENT DISCORD ===
+// === INITIALISATION DU BOT ===
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildPresences, // nécessaire pour afficher les statuts
+    GatewayIntentBits.GuildPresences, // ✅ nécessaire pour afficher le statut
   ],
 });
 
@@ -30,21 +30,14 @@ for (const file of commandFiles) {
     client.commands.set(command.name, command);
     console.log(`✅ Command loaded: ${command.name}`);
   } else {
-    console.log(`⚠️ Ignored file: ${file}`);
+    console.log(`⚠️ Command ignored: ${file}`);
   }
 }
 
-// === SÉCURITÉ ANTI-DOUBLE INSTANCE (Render bug) ===
-if (client.readyTimestamp) {
-  console.log("⚠️ Bot already initialized — exiting duplicate process.");
-  process.exit(0);
-}
-
-// === ÉVÉNEMENT CLIENT READY ===
-client.once("clientReady", () => {
+// === ÉVÉNEMENT READY ===
+client.once("ready", () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
   console.log("🔥 Hellz Bot is now operational — made by X1LLZ");
-  console.log("🌍 Connected successfully to Discord API");
 
   // === STATUT INITIAL ===
   client.user.setPresence({
@@ -54,43 +47,21 @@ client.once("clientReady", () => {
 
   // === STATUTS ROTATIFS ===
   const activities = [
-    // 💻 Tech / Fun
     { name: "discord.gg/hellz 🌐", type: ActivityType.Watching },
-    { name: "coding kawaii scripts 💻", type: ActivityType.Playing },
-    { name: "debugging bugs 🐛", type: ActivityType.Playing },
-    { name: "fighting syntax errors 😤", type: ActivityType.Competing },
-    { name: "writing spaghetti code 🍝", type: ActivityType.Competing },
-
-    // 🎮 Games
+    { name: "Roblox 🕹️", type: ActivityType.Playing },
     { name: "Minecraft", type: ActivityType.Playing },
     { name: "Valorant", type: ActivityType.Playing },
-    { name: "Roblox 🕹️", type: ActivityType.Playing },
-    { name: "League of Legends 😈", type: ActivityType.Playing },
-    { name: "Genshin Impact ✨", type: ActivityType.Playing },
-    { name: "Apex Legends 💥", type: ActivityType.Playing },
-
-    // 🎧 Music / Chill
-    { name: "lofi beats 🎶", type: ActivityType.Listening },
     { name: "anime openings 🎧", type: ActivityType.Listening },
     { name: "k-pop hits 💃", type: ActivityType.Listening },
-    { name: "nightcore vibes 🌙", type: ActivityType.Listening },
-    { name: "vaporwave dreams 🌀", type: ActivityType.Listening },
-
-    // 📺 Watching
-    { name: "Twitch streamers 🎥", type: ActivityType.Watching },
-    { name: "YouTube tutorials 📺", type: ActivityType.Watching },
     { name: "One Piece 🏴‍☠️", type: ActivityType.Watching },
-    { name: "Jujutsu Kaisen 🌀", type: ActivityType.Watching },
-    { name: "Attack on Titan 💥", type: ActivityType.Watching },
     { name: "Spy x Family 💚", type: ActivityType.Watching },
-
-    // 😴 Kawaii / Funny
-    { name: "uwu noises 🌸", type: ActivityType.Playing },
+    { name: "debugging bugs 🐛", type: ActivityType.Playing },
+    { name: "coding kawaii scripts 💻", type: ActivityType.Playing },
+    { name: "reading manga 📖", type: ActivityType.Watching },
+    { name: "lofi beats 🎶", type: ActivityType.Listening },
     { name: "protecting senpai 💞", type: ActivityType.Playing },
-    { name: "hugging everyone 🤗", type: ActivityType.Playing },
-    { name: "eating ramen 🍜", type: ActivityType.Playing },
-    { name: "spreading good vibes 🌈", type: ActivityType.Playing },
-    { name: "dreaming of snacks 🍪", type: ActivityType.Playing },
+    { name: "being adorable 💖", type: ActivityType.Playing },
+    { name: "uwu noises 🌸", type: ActivityType.Playing },
   ];
 
   let i = 0;
@@ -120,10 +91,34 @@ client.on("messageCreate", async message => {
   }
 });
 
-// === SERVEUR EXPRESS POUR RENDER ===
+// === SERVEUR EXPRESS (pour Render + site web) ===
 const app = express();
-app.get("/", (req, res) => res.send("✅ Hellz Bot is alive and fully operational — Made by X1LLZ"));
-app.listen(3000, () => console.log("🌐 Web server running for Render"));
+app.set("view engine", "ejs");
+app.use(express.static("public"));
+
+// === PAGE D’ACCUEIL ===
+app.get("/", (req, res) => {
+  res.render("index", {
+    botName: "Hellz",
+    botDesc:
+      "Hellz is a powerful, stylish Discord bot that mixes moderation, entertainment, and anime vibes — always online, always ready to serve 💫",
+    inviteLink:
+      "https://discord.com/oauth2/authorize?client_id=TON_ID_DU_BOT&permissions=8&scope=bot",
+    supportServer: "https://discord.gg/jyNXRJPMPm",
+  });
+});
+
+// === PAGE DES COMMANDES ===
+app.get("/commands", (req, res) => {
+  const commands = Array.from(client.commands.keys());
+  res.render("commands", { commands });
+});
+
+// === ROUTE DE STATUT (ping pour Render) ===
+app.get("/status", (req, res) => res.send("✅ Hellz Bot is running perfectly!"));
+
+// === SERVEUR WEB ===
+app.listen(3000, () => console.log("🌍 Web server active on port 3000"));
 
 // === CONNEXION DU BOT ===
 client.login(process.env.TOKEN);
