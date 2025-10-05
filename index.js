@@ -5,14 +5,14 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-// === INITIALISATION DU BOT ===
+// === INITIALISATION DU CLIENT DISCORD ===
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildPresences, // ✅ nécessaire pour afficher le statut
+    GatewayIntentBits.GuildPresences, // nécessaire pour afficher les statuts
   ],
 });
 
@@ -28,44 +28,69 @@ for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
   if (command.name && command.execute) {
     client.commands.set(command.name, command);
-    console.log(`✅ Commande chargée : ${command.name}`);
+    console.log(`✅ Command loaded: ${command.name}`);
   } else {
-    console.log(`⚠️ Commande ignorée : ${file}`);
+    console.log(`⚠️ Ignored file: ${file}`);
   }
 }
 
-// === ÉVÉNEMENT READY ===
+// === SÉCURITÉ ANTI-DOUBLE INSTANCE (Render bug) ===
+if (client.readyTimestamp) {
+  console.log("⚠️ Bot already initialized — exiting duplicate process.");
+  process.exit(0);
+}
+
+// === ÉVÉNEMENT CLIENT READY ===
 client.once("clientReady", () => {
-  console.log(`🤖 Connecté en tant que ${client.user.tag}`);
-  console.log("🌐 Web server running");
+  console.log(`🤖 Logged in as ${client.user.tag}`);
   console.log("🔥 Hellz Bot is now operational — made by X1LLZ");
+  console.log("🌍 Connected successfully to Discord API");
 
   // === STATUT INITIAL ===
   client.user.setPresence({
     status: "online",
-    activities: [
-      { name: "discord.gg/hellz 🌐", type: ActivityType.Watching }
-    ],
+    activities: [{ name: "discord.gg/hellz 🌐", type: ActivityType.Watching }],
   });
 
   // === STATUTS ROTATIFS ===
   const activities = [
+    // 💻 Tech / Fun
     { name: "discord.gg/hellz 🌐", type: ActivityType.Watching },
-    { name: "Roblox 🕹️", type: ActivityType.Playing },
+    { name: "coding kawaii scripts 💻", type: ActivityType.Playing },
+    { name: "debugging bugs 🐛", type: ActivityType.Playing },
+    { name: "fighting syntax errors 😤", type: ActivityType.Competing },
+    { name: "writing spaghetti code 🍝", type: ActivityType.Competing },
+
+    // 🎮 Games
     { name: "Minecraft", type: ActivityType.Playing },
     { name: "Valorant", type: ActivityType.Playing },
+    { name: "Roblox 🕹️", type: ActivityType.Playing },
+    { name: "League of Legends 😈", type: ActivityType.Playing },
+    { name: "Genshin Impact ✨", type: ActivityType.Playing },
+    { name: "Apex Legends 💥", type: ActivityType.Playing },
+
+    // 🎧 Music / Chill
+    { name: "lofi beats 🎶", type: ActivityType.Listening },
     { name: "anime openings 🎧", type: ActivityType.Listening },
     { name: "k-pop hits 💃", type: ActivityType.Listening },
-    { name: "One Piece 🏴‍☠️", type: ActivityType.Watching },
-    { name: "Spy x Family 💚", type: ActivityType.Watching },
-    { name: "debugging bugs 🐛", type: ActivityType.Playing },
-    { name: "coding kawaii scripts 💻", type: ActivityType.Playing },
-    { name: "reading manga 📖", type: ActivityType.Watching },
-    { name: "lofi beats 🎶", type: ActivityType.Listening },
+    { name: "nightcore vibes 🌙", type: ActivityType.Listening },
+    { name: "vaporwave dreams 🌀", type: ActivityType.Listening },
+
+    // 📺 Watching
     { name: "Twitch streamers 🎥", type: ActivityType.Watching },
-    { name: "protecting senpai 💞", type: ActivityType.Playing },
-    { name: "being adorable 💖", type: ActivityType.Playing },
+    { name: "YouTube tutorials 📺", type: ActivityType.Watching },
+    { name: "One Piece 🏴‍☠️", type: ActivityType.Watching },
+    { name: "Jujutsu Kaisen 🌀", type: ActivityType.Watching },
+    { name: "Attack on Titan 💥", type: ActivityType.Watching },
+    { name: "Spy x Family 💚", type: ActivityType.Watching },
+
+    // 😴 Kawaii / Funny
     { name: "uwu noises 🌸", type: ActivityType.Playing },
+    { name: "protecting senpai 💞", type: ActivityType.Playing },
+    { name: "hugging everyone 🤗", type: ActivityType.Playing },
+    { name: "eating ramen 🍜", type: ActivityType.Playing },
+    { name: "spreading good vibes 🌈", type: ActivityType.Playing },
+    { name: "dreaming of snacks 🍪", type: ActivityType.Playing },
   ];
 
   let i = 0;
@@ -91,14 +116,14 @@ client.on("messageCreate", async message => {
     await command.execute(message, args);
   } catch (err) {
     console.error(err);
-    message.reply("⚠️ Une erreur est survenue lors de l'exécution de cette commande !");
+    message.reply("⚠️ An error occurred while executing this command!");
   }
 });
 
-// === SERVEUR EXPRESS (pour Render) ===
+// === SERVEUR EXPRESS POUR RENDER ===
 const app = express();
-app.get("/", (req, res) => res.send("✅ Hellz Bot is alive and operational — Made by X1LLZ"));
-app.listen(3000, () => console.log("🌍 Web server actif sur Render"));
+app.get("/", (req, res) => res.send("✅ Hellz Bot is alive and fully operational — Made by X1LLZ"));
+app.listen(3000, () => console.log("🌐 Web server running for Render"));
 
 // === CONNEXION DU BOT ===
 client.login(process.env.TOKEN);
