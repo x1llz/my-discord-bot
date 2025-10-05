@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-// === INITIALISATION DU BOT ===
+// === INITIALISATION DU CLIENT DISCORD ===
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -20,31 +20,27 @@ client.commands = new Collection();
 const prefix = process.env.PREFIX || "+";
 
 // === CHARGEMENT DES COMMANDES ===
-const commandFiles = fs
-  .readdirSync(path.join(__dirname, "commands"))
-  .filter(file => file.endsWith(".js"));
-
+const commandFiles = fs.readdirSync(path.join(__dirname, "commands")).filter(file => file.endsWith(".js"));
 for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
   if (command.name && command.execute) {
     client.commands.set(command.name, command);
-    console.log(`✅ Commande chargée : ${command.name}`);
+    console.log(`✅ Command loaded: ${command.name}`);
   } else {
-    console.log(`⚠️ Commande ignorée : ${file}`);
+    console.log(`⚠️ Command ignored: ${file}`);
   }
 }
 
 // === ÉVÉNEMENT READY ===
 client.once("ready", () => {
-  console.log(`🤖 Connecté en tant que ${client.user.tag}`);
-  console.log("🔥 Hellz Bot est maintenant opérationnel — made by X1LLZ");
+  console.log(`🤖 Logged in as ${client.user.tag}`);
+  console.log("🌐 Web server running");
+  console.log("🔥 Hellz Bot is now operational — made by X1LLZ");
 
   // === STATUT INITIAL ===
   client.user.setPresence({
     status: "online",
-    activities: [
-      { name: "discord.gg/hellz 🌐", type: ActivityType.Watching }
-    ],
+    activities: [{ name: "discord.gg/hellz 🌐", type: ActivityType.Watching }],
   });
 
   // === STATUTS ROTATIFS ===
@@ -77,35 +73,26 @@ client.once("ready", () => {
 
 // === GESTION DES COMMANDES ===
 client.on("messageCreate", async message => {
-  if (message.author.bot) return;
-  if (!message.content.startsWith(prefix)) return;
+  if (!message.content.startsWith(prefix) || message.author.bot) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
-  const command = client.commands.get(commandName);
 
+  const command = client.commands.get(commandName);
   if (!command) return;
 
   try {
-    await command.execute(message, args);
+    await command.execute(message, args, client);
   } catch (err) {
     console.error(err);
-    message.reply("⚠️ Une erreur est survenue lors de l'exécution de cette commande !");
-  }
-});
-
-// === ÉCOUTER LES MESSAGES SUPPRIMÉS (pour +snipe) ===
-client.on("messageDelete", message => {
-  const snipeCommand = client.commands.get("snipe");
-  if (snipeCommand && typeof snipeCommand.onDelete === "function") {
-    snipeCommand.onDelete(message);
+    message.reply("⚠️ There was an error executing this command!");
   }
 });
 
 // === SERVEUR EXPRESS (pour Render) ===
 const app = express();
 app.get("/", (req, res) => res.send("✅ Hellz Bot is alive and operational — Made by X1LLZ"));
-app.listen(3000, () => console.log("🌍 Web server actif sur Render"));
+app.listen(process.env.PORT || 3000, () => console.log("🌍 Web server active on Render"));
 
 // === CONNEXION DU BOT ===
 client.login(process.env.TOKEN);
