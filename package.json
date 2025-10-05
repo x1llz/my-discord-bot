@@ -4,7 +4,7 @@
   "description": "Bot Discord stable et hébergé sur Render",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js & node server.js"
+    "start": "node server.js & node index.js"
   },
   "author": "Hellz",
   "license": "MIT",
