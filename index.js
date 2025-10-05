@@ -12,98 +12,100 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildPresences
+    GatewayIntentBits.GuildPresences,
   ],
 });
 
 client.commands = new Collection();
-client.prefix = "+";
-
-// === SYSTEME OWNER & BLACKLIST ===
-const dataDir = path.join(__dirname, "data");
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
-
-const ownersPath = path.join(dataDir, "owners.json");
-const blacklistPath = path.join(dataDir, "blacklist.json");
-
-if (!fs.existsSync(ownersPath)) fs.writeFileSync(ownersPath, JSON.stringify(["1187100546683899995"], null, 2)); // 👑 Default owner
-if (!fs.existsSync(blacklistPath)) fs.writeFileSync(blacklistPath, JSON.stringify([], null, 2));
-
-const getOwners = () => JSON.parse(fs.readFileSync(ownersPath, "utf8"));
-const getBlacklist = () => JSON.parse(fs.readFileSync(blacklistPath, "utf8"));
+const prefix = process.env.PREFIX || "+";
 
 // === CHARGEMENT DES COMMANDES ===
-const commandFiles = fs.readdirSync(path.join(__dirname, "commands")).filter(f => f.endsWith(".js"));
+const commandFiles = fs
+  .readdirSync(path.join(__dirname, "commands"))
+  .filter(file => file.endsWith(".js"));
+
 for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
   if (command.name && command.execute) {
     client.commands.set(command.name, command);
-    console.log(`✅ Command loaded: ${command.name}`);
+    console.log(`✅ Commande chargée : ${command.name}`);
   } else {
-    console.log(`⚠️ Command ignored: ${file}`);
+    console.log(`⚠️ Commande ignorée : ${file}`);
   }
 }
 
-// === EVENT READY ===
+// === ÉVÉNEMENT READY ===
 client.once("ready", () => {
-  console.log(`🤖 Logged in as ${client.user.tag}`);
-  console.log("🔥 Hellz Bot is operational — made by X1LLZ");
+  console.log(`🤖 Connecté en tant que ${client.user.tag}`);
+  console.log("🔥 Hellz Bot est maintenant opérationnel — made by X1LLZ");
 
   // === STATUT INITIAL ===
   client.user.setPresence({
     status: "online",
-    activities: [{ name: "discord.gg/hellz 🌐", type: ActivityType.Watching }],
+    activities: [
+      { name: "discord.gg/hellz 🌐", type: ActivityType.Watching }
+    ],
   });
 
-  // === ROTATION DE STATUS ===
+  // === STATUTS ROTATIFS ===
   const activities = [
     { name: "discord.gg/hellz 🌐", type: ActivityType.Watching },
-    { name: "moderating servers 🛡️", type: ActivityType.Playing },
-    { name: "helping users 😎", type: ActivityType.Playing },
+    { name: "Roblox 🕹️", type: ActivityType.Playing },
+    { name: "Minecraft", type: ActivityType.Playing },
+    { name: "Valorant", type: ActivityType.Playing },
+    { name: "anime openings 🎧", type: ActivityType.Listening },
+    { name: "k-pop hits 💃", type: ActivityType.Listening },
+    { name: "One Piece 🏴‍☠️", type: ActivityType.Watching },
+    { name: "Spy x Family 💚", type: ActivityType.Watching },
+    { name: "debugging bugs 🐛", type: ActivityType.Playing },
     { name: "coding kawaii scripts 💻", type: ActivityType.Playing },
+    { name: "reading manga 📖", type: ActivityType.Watching },
+    { name: "lofi beats 🎶", type: ActivityType.Listening },
+    { name: "Twitch streamers 🎥", type: ActivityType.Watching },
     { name: "protecting senpai 💞", type: ActivityType.Playing },
+    { name: "being adorable 💖", type: ActivityType.Playing },
+    { name: "uwu noises 🌸", type: ActivityType.Playing },
   ];
+
   let i = 0;
   setInterval(() => {
-    const act = activities[i++ % activities.length];
-    client.user.setActivity(act.name, { type: act.type });
-  }, 300000);
+    const activity = activities[i % activities.length];
+    client.user.setActivity(activity.name, { type: activity.type });
+    i++;
+  }, 300000); // 5 min
 });
 
-// === MESSAGE HANDLER ===
+// === GESTION DES COMMANDES ===
 client.on("messageCreate", async message => {
   if (message.author.bot) return;
+  if (!message.content.startsWith(prefix)) return;
 
-  // Répond quand on le ping
-  if (message.mentions.has(client.user)) {
-    return message.reply("👋 Hey! I’m **Hellz**, your all-in-one moderation and fun bot. Type `+help` to see what I can do!");
-  }
-
-  if (!message.content.startsWith(client.prefix)) return;
-  const args = message.content.slice(client.prefix.length).trim().split(/ +/);
+  const args = message.content.slice(prefix.length).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
-
   const command = client.commands.get(commandName);
+
   if (!command) return;
 
-  const blacklist = getBlacklist();
-  const owners = getOwners();
-
-  if (blacklist.includes(message.author.id))
-    return message.reply("🚫 You are blacklisted from using this bot.");
-
   try {
-    await command.execute(message, args, { client, owners, blacklist, getOwners, getBlacklist });
+    await command.execute(message, args);
   } catch (err) {
     console.error(err);
-    message.reply("⚠️ An error occurred while executing this command.");
+    message.reply("⚠️ Une erreur est survenue lors de l'exécution de cette commande !");
   }
 });
 
-// === SERVEUR EXPRESS (Render) ===
+// === ÉCOUTER LES MESSAGES SUPPRIMÉS (pour +snipe) ===
+client.on("messageDelete", message => {
+  const snipeCommand = client.commands.get("snipe");
+  if (snipeCommand && typeof snipeCommand.onDelete === "function") {
+    snipeCommand.onDelete(message);
+  }
+});
+
+// === SERVEUR EXPRESS (pour Render) ===
 const app = express();
-app.get("/", (req, res) => res.send("✅ Hellz Bot is alive — made by X1LLZ"));
-app.listen(3000, () => console.log("🌍 Web server active on Render"));
+app.get("/", (req, res) => res.send("✅ Hellz Bot is alive and operational — Made by X1LLZ"));
+app.listen(3000, () => console.log("🌍 Web server actif sur Render"));
 
 // === CONNEXION DU BOT ===
 client.login(process.env.TOKEN);

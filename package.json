@@ -1,15 +1,31 @@
 {
   "name": "hellz-bot",
   "version": "1.0.0",
-  "description": "Hellz Discord Bot with Website Dashboard",
+  "description": "A powerful Discord moderation and fun bot made by X1LLZ — featuring blacklist, snipe, gif, and more.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "engines": {
+    "node": ">=18.x"
   },
   "dependencies": {
     "discord.js": "^14.16.3",
-    "express": "^4.21.1",
-    "ejs": "^3.1.10",
-    "dotenv": "^16.4.5"
-  }
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "moderation",
+    "fun",
+    "hellz",
+    "x1llz"
+  ],
+  "author": "X1LLZ",
+  "license": "MIT"
 }
