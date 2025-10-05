@@ -1,5 +1,5 @@
 // === IMPORTS ===
-const { Client, GatewayIntentBits, Collection } = require("discord.js");
+const { Client, GatewayIntentBits, Collection, ActivityType } = require("discord.js");
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -12,6 +12,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildPresences, // ✅ nécessaire pour afficher le statut
   ],
 });
 
@@ -33,9 +34,46 @@ for (const file of commandFiles) {
   }
 }
 
-// === ÉVÉNEMENTS DU BOT ===
-client.once("ready", () => {
+// === ÉVÉNEMENT READY ===
+client.once("clientReady", () => {
   console.log(`🤖 Connecté en tant que ${client.user.tag}`);
+  console.log("🌐 Web server running");
+  console.log("🔥 Hellz Bot is now operational — made by X1LLZ");
+
+  // === STATUT INITIAL ===
+  client.user.setPresence({
+    status: "online",
+    activities: [
+      { name: "discord.gg/hellz 🌐", type: ActivityType.Watching }
+    ],
+  });
+
+  // === STATUTS ROTATIFS ===
+  const activities = [
+    { name: "discord.gg/hellz 🌐", type: ActivityType.Watching },
+    { name: "Roblox 🕹️", type: ActivityType.Playing },
+    { name: "Minecraft", type: ActivityType.Playing },
+    { name: "Valorant", type: ActivityType.Playing },
+    { name: "anime openings 🎧", type: ActivityType.Listening },
+    { name: "k-pop hits 💃", type: ActivityType.Listening },
+    { name: "One Piece 🏴‍☠️", type: ActivityType.Watching },
+    { name: "Spy x Family 💚", type: ActivityType.Watching },
+    { name: "debugging bugs 🐛", type: ActivityType.Playing },
+    { name: "coding kawaii scripts 💻", type: ActivityType.Playing },
+    { name: "reading manga 📖", type: ActivityType.Watching },
+    { name: "lofi beats 🎶", type: ActivityType.Listening },
+    { name: "Twitch streamers 🎥", type: ActivityType.Watching },
+    { name: "protecting senpai 💞", type: ActivityType.Playing },
+    { name: "being adorable 💖", type: ActivityType.Playing },
+    { name: "uwu noises 🌸", type: ActivityType.Playing },
+  ];
+
+  let i = 0;
+  setInterval(() => {
+    const activity = activities[i % activities.length];
+    client.user.setActivity(activity.name, { type: activity.type });
+    i++;
+  }, 300000); // 5 minutes
 });
 
 // === GESTION DES COMMANDES ===
@@ -52,14 +90,15 @@ client.on("messageCreate", async message => {
   try {
     await command.execute(message, args);
   } catch (err) {
+    console.error(err);
     message.reply("⚠️ Une erreur est survenue lors de l'exécution de cette commande !");
   }
 });
 
 // === SERVEUR EXPRESS (pour Render) ===
 const app = express();
-app.get("/", (req, res) => res.send("Bot is alive!"));
-app.listen(3000, () => console.log("🌐 Web server running"));
+app.get("/", (req, res) => res.send("✅ Hellz Bot is alive and operational — Made by X1LLZ"));
+app.listen(3000, () => console.log("🌍 Web server actif sur Render"));
 
-// === CONNEXION ===
+// === CONNEXION DU BOT ===
 client.login(process.env.TOKEN);
