@@ -1,79 +1,45 @@
-// === IMPORTS ===
-const { Client, GatewayIntentBits, Collection, ActivityType } = require("discord.js");
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-require("dotenv").config();
+// index.js — Version stable anti-duplication
+require('dotenv').config();
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const fs = require('fs');
 
-// === INITIALISATION DU CLIENT DISCORD ===
+// Empêche les doubles exécutions sur Render
+if (global.botStarted) {
+  console.log("Bot déjà démarré, arrêt de cette instance...");
+  process.exit(0);
+}
+global.botStarted = true;
+
+// Création du client
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildPresences,
   ],
 });
 
 client.commands = new Collection();
-const prefix = process.env.PREFIX || "+";
+const prefix = process.env.PREFIX || '+';
 
-// === CHARGEMENT DES COMMANDES ===
-const commandFiles = fs.readdirSync(path.join(__dirname, "commands")).filter(file => file.endsWith(".js"));
+// === Chargement des commandes ===
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
 for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
-  if (command.name && command.execute) {
-    client.commands.set(command.name, command);
-    console.log(`✅ Command loaded: ${command.name}`);
-  } else {
-    console.log(`⚠️ Command ignored: ${file}`);
-  }
+  client.commands.set(command.name, command);
+  console.log(`✅ Commande chargée : ${command.name}`);
 }
 
-// === ÉVÉNEMENT READY ===
-client.once("ready", () => {
-  console.log(`🤖 Logged in as ${client.user.tag}`);
-  console.log("🌐 Web server running");
-  console.log("🔥 Hellz Bot is now operational — made by X1LLZ");
-
-  // === STATUT INITIAL ===
-  client.user.setPresence({
-    status: "online",
-    activities: [{ name: "discord.gg/hellz 🌐", type: ActivityType.Watching }],
-  });
-
-  // === STATUTS ROTATIFS ===
-  const activities = [
-    { name: "discord.gg/hellz 🌐", type: ActivityType.Watching },
-    { name: "Roblox 🕹️", type: ActivityType.Playing },
-    { name: "Minecraft", type: ActivityType.Playing },
-    { name: "Valorant", type: ActivityType.Playing },
-    { name: "anime openings 🎧", type: ActivityType.Listening },
-    { name: "k-pop hits 💃", type: ActivityType.Listening },
-    { name: "One Piece 🏴‍☠️", type: ActivityType.Watching },
-    { name: "Spy x Family 💚", type: ActivityType.Watching },
-    { name: "debugging bugs 🐛", type: ActivityType.Playing },
-    { name: "coding kawaii scripts 💻", type: ActivityType.Playing },
-    { name: "reading manga 📖", type: ActivityType.Watching },
-    { name: "lofi beats 🎶", type: ActivityType.Listening },
-    { name: "Twitch streamers 🎥", type: ActivityType.Watching },
-    { name: "protecting senpai 💞", type: ActivityType.Playing },
-    { name: "being adorable 💖", type: ActivityType.Playing },
-    { name: "uwu noises 🌸", type: ActivityType.Playing },
-  ];
-
-  let i = 0;
-  setInterval(() => {
-    const activity = activities[i % activities.length];
-    client.user.setActivity(activity.name, { type: activity.type });
-    i++;
-  }, 300000); // 5 min
+// === Événement "ready" ===
+client.once('ready', () => {
+  console.log(`🤖 Connecté en tant que ${client.user.tag}`);
 });
 
-// === GESTION DES COMMANDES ===
-client.on("messageCreate", async message => {
-  if (!message.content.startsWith(prefix) || message.author.bot) return;
+// === Événement "messageCreate" ===
+client.on('messageCreate', async message => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
@@ -83,16 +49,17 @@ client.on("messageCreate", async message => {
 
   try {
     await command.execute(message, args, client);
-  } catch (err) {
-    console.error(err);
-    message.reply("⚠️ There was an error executing this command!");
+  } catch (error) {
+    console.error(error);
+    message.reply("❌ Une erreur est survenue lors de l'exécution de la commande.");
   }
 });
 
-// === SERVEUR EXPRESS (pour Render) ===
-const app = express();
-app.get("/", (req, res) => res.send("✅ Hellz Bot is alive and operational — Made by X1LLZ"));
-app.listen(process.env.PORT || 3000, () => console.log("🌍 Web server active on Render"));
+// Gestion des erreurs pour éviter les crashs multiples
+process.on('unhandledRejection', err => console.error('Unhandled Rejection:', err));
+process.on('uncaughtException', err => console.error('Uncaught Exception:', err));
 
-// === CONNEXION DU BOT ===
-client.login(process.env.TOKEN);
+// === Connexion du bot ===
+client.login(process.env.TOKEN).catch(err => {
+  console.error("❌ Erreur de connexion au bot :", err.message);
+});
