@@ -1,4 +1,5 @@
 require("dotenv").config();
+<<<<<<< HEAD
 const {
   Client,
   GatewayIntentBits,
@@ -10,12 +11,19 @@ const fs = require("fs");
 const express = require("express");
 
 // === Client configuration ===
+=======
+const { Client, GatewayIntentBits, Collection, ActivityType } = require("discord.js");
+const fs = require("fs");
+const express = require("express");
+
+>>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
+<<<<<<< HEAD
     GatewayIntentBits.GuildVoiceStates, // pour la musique
     GatewayIntentBits.GuildMessageReactions, // pour les giveaways / réactions
   ],
@@ -25,12 +33,15 @@ const client = new Client({
     Partials.Reaction,
     Partials.GuildMember,
     Partials.User,
+=======
+>>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
   ],
 });
 
 client.commands = new Collection();
 const prefix = process.env.PREFIX || "+";
 
+<<<<<<< HEAD
 // --- Data stores centralisés (no more listeners in commands)
 client.snipes = new Map(); // key = channelId -> { content, author, image, time }
 client.afk = new Map(); // key = userId -> { reason, since }
@@ -40,10 +51,16 @@ client._recentMessages = new Set(); // small de-dup set for messageCreate duplic
 const loadCommands = (dir = "./commands") => {
   if (!fs.existsSync(dir)) return;
   fs.readdirSync(dir).forEach((file) => {
+=======
+// === Chargement automatique des commandes ===
+const loadCommands = (dir = "./commands") => {
+  fs.readdirSync(dir).forEach(file => {
+>>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
     const fullPath = `${dir}/${file}`;
     if (fs.lstatSync(fullPath).isDirectory()) {
       loadCommands(fullPath);
     } else if (file.endsWith(".js")) {
+<<<<<<< HEAD
       try {
         const command = require(fullPath);
         if (command.name && typeof command.execute === "function") {
@@ -55,11 +72,17 @@ const loadCommands = (dir = "./commands") => {
       } catch (err) {
         console.error(`❌ Error loading command ${file}:`, err);
       }
+=======
+      const command = require(fullPath);
+      client.commands.set(command.name, command);
+      console.log(`✅ Commande chargée : ${command.name}`);
+>>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
     }
   });
 };
 loadCommands();
 
+<<<<<<< HEAD
 // === Ready ===
 client.once("ready", () => {
   console.log(`🌸 Logged in as ${client.user.tag} 🌸`);
@@ -67,6 +90,14 @@ client.once("ready", () => {
   // === Your activity list remains 100% unchanged ===
   const activities = [
     // (PUT EXACTLY the full activities list you had — I keep it identical)
+=======
+// === Quand le bot est prêt ===
+client.once("ready", () => {
+  console.log(`🌸 Connecté en tant que ${client.user.tag} 🌸`);
+
+  // === Liste MASSIVE d’activités ===
+  const activities = [
+>>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
     // 🎮 Gaming
     { name: "Valorant", type: ActivityType.Playing },
     { name: "Roblox", type: ActivityType.Playing },
@@ -165,6 +196,7 @@ client.once("ready", () => {
   setInterval(() => {
     client.user.setActivity(activities[i]);
     i = (i + 1) % activities.length;
+<<<<<<< HEAD
   }, 180000);
 });
 
@@ -236,4 +268,35 @@ app.listen(process.env.PORT || 3000, () => {
 });
 
 // === Bot login ===
+=======
+  }, 180000); // change toutes les 3 minutes
+});
+
+// === Gestion des messages ===
+client.on("messageCreate", async (message) => {
+  if (message.author.bot || !message.content.startsWith(prefix)) return;
+
+  const args = message.content.slice(prefix.length).trim().split(/ +/);
+  const cmdName = args.shift().toLowerCase();
+
+  const command = client.commands.get(cmdName);
+  if (!command) return;
+
+  try {
+    await command.execute(message, args);
+  } catch (err) {
+    console.error(err);
+    message.reply("⚠️ Une erreur est survenue pendant l’exécution de la commande.");
+  }
+});
+
+// === Express (keep-alive Render) ===
+const app = express();
+app.get("/", (req, res) => res.send("🌸 Hellz Bot tourne avec 100 activités stylées 🌸"));
+app.listen(process.env.PORT || 3000, () => {
+  console.log(`🌐 Serveur web actif sur le port ${process.env.PORT || 3000}`);
+});
+
+// === Connexion ===
+>>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
 client.login(process.env.TOKEN);
