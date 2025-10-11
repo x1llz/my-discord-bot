@@ -1,44 +1,45 @@
 const { EmbedBuilder, PermissionsBitField } = require("discord.js");
-const ms = require("ms");
 
 module.exports = {
   name: "mute",
-  description: "Mute a user for a specified duration.",
+  description: "Mute (timeout) a member so they can't talk 🕐",
   async execute(message, args) {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.MuteMembers)) {
+    // Vérifie les permissions de la personne qui exécute
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) {
       return message.reply("❌ You don’t have permission to mute members.");
     }
 
-    const user = message.mentions.users.first();
-    if (!user) return message.reply("⚠️ You must mention a user to mute.");
+    const target = message.mentions.members.first();
+    if (!target) return message.reply("⚠️ Please mention someone to mute.");
 
-    const member = message.guild.members.cache.get(user.id);
-    if (!member) return message.reply("❌ That user is not in this server.");
+    if (target.id === message.author.id)
+      return message.reply("😅 You can’t mute yourself.");
+    if (target.permissions.has(PermissionsBitField.Flags.Administrator))
+      return message.reply("🚫 You can’t mute an administrator.");
 
-    const duration = args[1];
-    if (!duration) return message.reply("⏱️ Please specify a mute duration (e.g. `10m`, `1h`, `1d`).");
+    const duration = args[1] ? parseInt(args[1]) : 10; // Durée par défaut : 10 minutes
+    const reason = args.slice(2).join(" ") || "No reason provided.";
 
-    const time = ms(duration);
-    if (!time) return message.reply("⚠️ Invalid time format. Use `s`, `m`, `h`, or `d`.");
+    // Convertir en millisecondes
+    const timeMs = duration * 60 * 1000;
+    if (isNaN(timeMs) || timeMs <= 0)
+      return message.reply("⏱️ Invalid duration. Use minutes (e.g. `+mute @user 15 reason`).");
 
-    const role = message.guild.roles.cache.find(r => r.name === "Muted");
-    if (!role) return message.reply("⚠️ No 'Muted' role found. Please create one.");
+    try {
+      await target.timeout(timeMs, reason);
 
-    await member.roles.add(role);
+      const embed = new EmbedBuilder()
+        .setColor("Red")
+        .setTitle("🔇 Member Muted")
+        .setDescription(`**${target.user.tag}** has been muted for **${duration} minutes**.`)
+        .addFields({ name: "Reason", value: reason })
+        .setFooter({ text: `Muted by ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
+        .setTimestamp();
 
-    const embed = new EmbedBuilder()
-      .setColor("Orange")
-      .setTitle("🔇 Member Muted")
-      .setDescription(`**${user.tag}** has been muted for **${duration}** by **${message.author.tag}**`)
-      .setTimestamp();
-
-    message.channel.send({ embeds: [embed] });
-
-    setTimeout(async () => {
-      if (member.roles.cache.has(role.id)) {
-        await member.roles.remove(role);
-        message.channel.send(`✅ **${user.tag}** has been automatically unmuted.`);
-      }
-    }, time);
+      await message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error(err);
+      message.reply("❌ I couldn’t mute this member. Check my permissions.");
+    }
   },
 };
