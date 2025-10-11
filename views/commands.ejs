@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hellz Bot Commands | Made by X1LLZ</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- LOGO -->
+    <div class="logo-container small">
+      <img src="/images/hellz.gif" alt="Hellz Bot Logo" class="logo small" />
+      <h1 class="glow">Hellz Commands</h1>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+      <a href="/">🏠 Home</a>
+      <a href="/commands" class="active">💬 Commands</a>
+      <a href="https://discord.gg/hellz" target="_blank">🌐 Join Discord</a>
+    </nav>
+
+    <!-- LISTE DES COMMANDES -->
+    <main>
+      <h2>Available Commands</h2>
+      <p>Here’s a complete list of commands you can use with Hellz Bot 👇</p>
+
+      <div class="commands-grid">
+        <% commands.forEach(command => { %>
+          <div class="command-card">
+            <h3>+<%= command.name %></h3>
+            <p><%= command.description || "No description provided." %></p>
+          </div>
+        <% }) %>
+      </div>
+    </main>
+
+    <footer>
+      <p>© <%= new Date().getFullYear() %> Hellz Bot — Made with ❤️ by <span class="author">X1LLZ</span></p>
+    </footer>
+  </div>
+</body>
+</html>
+
