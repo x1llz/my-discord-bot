@@ -1,5 +1,4 @@
 require("dotenv").config();
-<<<<<<< HEAD
 const {
   Client,
   GatewayIntentBits,
@@ -11,21 +10,14 @@ const fs = require("fs");
 const express = require("express");
 
 // === Client configuration ===
-=======
-const { Client, GatewayIntentBits, Collection, ActivityType } = require("discord.js");
-const fs = require("fs");
-const express = require("express");
-
->>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
-<<<<<<< HEAD
-    GatewayIntentBits.GuildVoiceStates, // pour la musique
-    GatewayIntentBits.GuildMessageReactions, // pour les giveaways / réactions
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMessageReactions,
   ],
   partials: [
     Partials.Message,
@@ -33,34 +25,25 @@ const client = new Client({
     Partials.Reaction,
     Partials.GuildMember,
     Partials.User,
-=======
->>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
   ],
 });
 
 client.commands = new Collection();
 const prefix = process.env.PREFIX || "+";
 
-<<<<<<< HEAD
-// --- Data stores centralisés (no more listeners in commands)
-client.snipes = new Map(); // key = channelId -> { content, author, image, time }
-client.afk = new Map(); // key = userId -> { reason, since }
-client._recentMessages = new Set(); // small de-dup set for messageCreate duplicates
+// === Data stores ===
+client.snipes = new Map(); // { channelId -> { content, author, image, time } }
+client.afk = new Map(); // { userId -> { reason, since } }
+client._recentMessages = new Set(); // anti-duplication
 
 // === Auto command loader ===
 const loadCommands = (dir = "./commands") => {
   if (!fs.existsSync(dir)) return;
   fs.readdirSync(dir).forEach((file) => {
-=======
-// === Chargement automatique des commandes ===
-const loadCommands = (dir = "./commands") => {
-  fs.readdirSync(dir).forEach(file => {
->>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
     const fullPath = `${dir}/${file}`;
     if (fs.lstatSync(fullPath).isDirectory()) {
       loadCommands(fullPath);
     } else if (file.endsWith(".js")) {
-<<<<<<< HEAD
       try {
         const command = require(fullPath);
         if (command.name && typeof command.execute === "function") {
@@ -72,32 +55,17 @@ const loadCommands = (dir = "./commands") => {
       } catch (err) {
         console.error(`❌ Error loading command ${file}:`, err);
       }
-=======
-      const command = require(fullPath);
-      client.commands.set(command.name, command);
-      console.log(`✅ Commande chargée : ${command.name}`);
->>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
     }
   });
 };
 loadCommands();
 
-<<<<<<< HEAD
-// === Ready ===
+// === Ready event ===
 client.once("ready", () => {
   console.log(`🌸 Logged in as ${client.user.tag} 🌸`);
 
-  // === Your activity list remains 100% unchanged ===
+  // === Your original activity list (unchanged) ===
   const activities = [
-    // (PUT EXACTLY the full activities list you had — I keep it identical)
-=======
-// === Quand le bot est prêt ===
-client.once("ready", () => {
-  console.log(`🌸 Connecté en tant que ${client.user.tag} 🌸`);
-
-  // === Liste MASSIVE d’activités ===
-  const activities = [
->>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
     // 🎮 Gaming
     { name: "Valorant", type: ActivityType.Playing },
     { name: "Roblox", type: ActivityType.Playing },
@@ -196,7 +164,6 @@ client.once("ready", () => {
   setInterval(() => {
     client.user.setActivity(activities[i]);
     i = (i + 1) % activities.length;
-<<<<<<< HEAD
   }, 180000);
 });
 
@@ -215,25 +182,24 @@ client.on("messageDelete", (message) => {
   }
 });
 
-// === Central message handler (with de-dup and AFK handling) ===
+// === Message handler (AFK + commands) ===
 client.on("messageCreate", async (message) => {
   try {
-    // ignore bots & DMs
     if (!message.guild || message.author.bot) return;
 
-    // --- De-dup: ignore duplicate message events with same ID (short window)
+    // anti spam duplicate event
     if (client._recentMessages.has(message.id)) return;
     client._recentMessages.add(message.id);
     setTimeout(() => client._recentMessages.delete(message.id), 1500);
 
-    // --- AFK: remove if the author was AFK
+    // AFK remove
     if (client.afk.has(message.author.id)) {
       const old = client.afk.get(message.author.id);
       client.afk.delete(message.author.id);
-      message.reply(`✅ Welcome back ${message.author.username}, I removed your AFK (was: ${old.reason}).`);
+      message.reply(`✅ Welcome back ${message.author.username}, AFK removed (was: ${old.reason}).`);
     }
 
-    // --- AFK: notify if someone mentions AFK users
+    // mention AFK
     if (message.mentions.users.size > 0) {
       message.mentions.users.forEach((u) => {
         if (client.afk.has(u.id)) {
@@ -244,7 +210,7 @@ client.on("messageCreate", async (message) => {
       });
     }
 
-    // --- Command parsing
+    // commands
     if (!message.content.startsWith(prefix)) return;
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const cmdName = args.shift()?.toLowerCase();
@@ -256,47 +222,18 @@ client.on("messageCreate", async (message) => {
     await command.execute(message, args, client);
   } catch (err) {
     console.error("messageCreate handler error:", err);
-    try { message.reply("⚠️ An error occurred while executing the command."); } catch {}
+    try {
+      message.reply("⚠️ An error occurred while executing the command.");
+    } catch {}
   }
 });
 
-// === Keep-alive Express server (Render) ===
+// === Express keep-alive ===
 const app = express();
 app.get("/", (req, res) => res.send("🌸 Hellz Bot is online with 100+ activities 🌸"));
 app.listen(process.env.PORT || 3000, () => {
   console.log(`🌐 Web server active on port ${process.env.PORT || 3000}`);
 });
 
-// === Bot login ===
-=======
-  }, 180000); // change toutes les 3 minutes
-});
-
-// === Gestion des messages ===
-client.on("messageCreate", async (message) => {
-  if (message.author.bot || !message.content.startsWith(prefix)) return;
-
-  const args = message.content.slice(prefix.length).trim().split(/ +/);
-  const cmdName = args.shift().toLowerCase();
-
-  const command = client.commands.get(cmdName);
-  if (!command) return;
-
-  try {
-    await command.execute(message, args);
-  } catch (err) {
-    console.error(err);
-    message.reply("⚠️ Une erreur est survenue pendant l’exécution de la commande.");
-  }
-});
-
-// === Express (keep-alive Render) ===
-const app = express();
-app.get("/", (req, res) => res.send("🌸 Hellz Bot tourne avec 100 activités stylées 🌸"));
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`🌐 Serveur web actif sur le port ${process.env.PORT || 3000}`);
-});
-
-// === Connexion ===
->>>>>>> bc39ee4acadc7aea05e1de60c118c05a19a7c06d
+// === Login ===
 client.login(process.env.TOKEN);
