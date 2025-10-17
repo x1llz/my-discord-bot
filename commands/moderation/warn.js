@@ -1,27 +1,21 @@
-const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
-const warns = new Map();
+// ✅ commands/moderation/warn.js
+import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import ms from "ms";
 
-module.exports = {
+export default {
   name: "warn",
-  description: "Warn a user ⚠️ / Avertir un utilisateur ⚠️",
+  description: "Warn a member ⚠️",
   async execute(message, args) {
-    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers))
-      return message.reply("❌ You don't have permission / Tu n’as pas la permission.");
+    // Vérif permissions
+    if (!message.member.permissions.has(PermissionFlagsBits.KickMembers))
+      return message.reply("❌ You don’t have permission to warn members.");
 
-    const member = message.mentions.members.first();
-    if (!member) return message.reply("⚠️ Mention someone to warn / Mentionne quelqu’un à avertir.");
+    const target = message.mentions.members.first();
+    if (!target) return message.reply("⚠️ Mention a user to warn.");
 
-    const reason = args.slice(1).join(" ") || "No reason / Aucune raison.";
-    if (!warns.has(member.id)) warns.set(member.id, []);
-    warns.get(member.id).push({ reason, by: message.author.tag, date: new Date() });
+    const reason = args.slice(1).join(" ") || "No reason provided";
 
+    // Construction de l’embed
     const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("⚠️ User Warned / Utilisateur averti")
-      .setDescription(`**${member.user.tag}** was warned.\n> Reason: ${reason}`)
-      .setFooter({ text: `By ${message.author.tag}` })
-      .setTimestamp();
-
-    message.channel.send({ embeds: [embed] });
-  },
-};
+      .setColor("#ffcc00")
+      .set
