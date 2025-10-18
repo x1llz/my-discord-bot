@@ -1,8 +1,8 @@
-const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+import { PermissionFlagsBits, EmbedBuilder } from "discord.js";
 
-module.exports = {
+export default {
   name: "roleall",
-  description: "Give a role to everyone in the server 🌍",
+  description: "Give a role to everyone in the server. Usage: +roleall @role",
   async execute(message, args) {
     if (!message.member.permissions.has(PermissionFlagsBits.ManageRoles))
       return message.reply("❌ You don't have permission to manage roles.");

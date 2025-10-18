@@ -1,20 +1,20 @@
-const { EmbedBuilder } = require("discord.js");
+import { EmbedBuilder } from "discord.js";
 
-module.exports = {
+export default {
   name: "poll",
-  description: "Create a poll 🗳️",
+  description: "Create a poll.",
   async execute(message, args) {
     const question = args.join(" ");
-    if (!question) return message.reply("⚠️ You must provide a question!");
+    if (!question) return message.reply("❌ Please provide a poll question.");
 
     const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("📊 Poll Time!")
-      .setDescription(`> **${question}**\n\n✅ = Yes\n❌ = No`)
+      .setColor("#9b59b6")
+      .setTitle("🗳️ New Poll")
+      .setDescription(question)
       .setFooter({ text: `Poll created by ${message.author.tag}` });
 
-    const msg = await message.channel.send({ embeds: [embed] });
-    await msg.react("✅");
-    await msg.react("❌");
+    const pollMsg = await message.channel.send({ embeds: [embed] });
+    await pollMsg.react("✅");
+    await pollMsg.react("❌");
   },
 };

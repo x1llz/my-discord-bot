@@ -1,20 +1,20 @@
-const { EmbedBuilder } = require("discord.js");
+import { EmbedBuilder } from "discord.js";
 
-module.exports = {
+export default {
   name: "rolesinfo",
-  description: "Show all roles in the server 🧾",
+  description: "Show all roles in the server",
   async execute(message) {
     const roles = message.guild.roles.cache
-      .filter((r) => r.name !== "@everyone")
-      .map((r) => r.name)
-      .join(", ");
+      .filter(r => r.name !== "@everyone")
+      .map(r => `${r.name} (${r.id})`)
+      .join("\n") || "No roles.";
 
     const embed = new EmbedBuilder()
       .setColor("#3498db")
       .setTitle("📜 Server Roles")
-      .setDescription(roles || "No roles found.")
-      .setFooter({ text: `${message.guild.name}` });
+      .setDescription(roles)
+      .setFooter({ text: `Server: ${message.guild.name}` });
 
-    message.channel.send({ embeds: [embed] });
+    return message.channel.send({ embeds: [embed] });
   },
 };

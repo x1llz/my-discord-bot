@@ -5,12 +5,11 @@ import {
   GatewayIntentBits,
   Partials,
   Collection,
-  ActivityType
+  ActivityType,
 } from "discord.js";
-import { loadCommands } from "./handlers/commandHandler.js";
-import { registerEvents } from "./handlers/eventHandler.js";
+import fs from "fs";
+import path from "path";
 
-// === Client Setup ===
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -28,30 +27,55 @@ const client = new Client({
   ],
 });
 
-// === Data Stores ===
 client.commands = new Collection();
-client.snipes = new Map();
-client.afk = new Map();
-client._recentMessages = new Set();
-
 const PREFIX = process.env.PREFIX || "+";
 
-// === Command & Event Loading ===
-await loadCommands(client, "./commands");
-registerEvents(client, PREFIX);
+// === Command Loader ===
+const loadCommands = (dir = "./commands") => {
+  fs.readdirSync(dir).forEach((file) => {
+    const fullPath = path.join(dir, file);
+    if (fs.lstatSync(fullPath).isDirectory()) return loadCommands(fullPath);
+    if (file.endsWith(".js")) {
+      import(fullPath).then((cmd) => {
+        const command = cmd.default;
+        if (command?.name && typeof command.execute === "function") {
+          client.commands.set(command.name.toLowerCase(), command);
+          console.log(`✅ Command loaded: ${command.name}`);
+        }
+      }).catch((err) => console.error(`❌ Error loading ${file}:`, err));
+    }
+  });
+};
+loadCommands();
 
-// === Ready Event ===
+// === Ready ===
 client.once("ready", () => {
   client.user.setActivity("discord.gg/hellz", { type: ActivityType.Playing });
   console.log(`🌸 Logged in as ${client.user.tag}`);
 });
 
-// === Keep Alive (Render) ===
+// === Message Handler ===
+client.on("messageCreate", async (message) => {
+  if (!message.guild || message.author.bot) return;
+  if (!message.content.startsWith(PREFIX)) return;
+
+  const args = message.content.slice(PREFIX.length).trim().split(/ +/);
+  const cmdName = args.shift()?.toLowerCase();
+  const command = client.commands.get(cmdName);
+  if (!command) return;
+
+  try {
+    await command.execute(message, args, client);
+  } catch (err) {
+    console.error(err);
+    message.reply("⚠️ An error occurred while executing this command.");
+  }
+});
+
+// === Express Keep Alive ===
 const app = express();
-app.get("/", (req, res) => res.send("🌸 Hellz Bot V2 is alive 🌸"));
-app.listen(process.env.PORT || 3000, () =>
-  console.log(`🌐 Web server active on port ${process.env.PORT || 3000}`)
-);
+app.get("/", (req, res) => res.send("🌸 Hellz Bot is alive 🌸"));
+app.listen(process.env.PORT || 3000);
 
 // === Login ===
 client.login(process.env.TOKEN);

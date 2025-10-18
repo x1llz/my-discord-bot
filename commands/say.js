@@ -1,10 +1,10 @@
-module.exports = {
+export default {
   name: "say",
-  description: "Make the bot say something 💬",
+  description: "Make the bot repeat your message.",
   async execute(message, args) {
-    if (!args.length) return message.reply("⚠️ You need to provide a message!");
     const text = args.join(" ");
-    await message.delete().catch(() => {});
+    if (!text) return message.reply("❌ Please provide text to say.");
+    message.delete().catch(() => {});
     message.channel.send(text);
   },
 };

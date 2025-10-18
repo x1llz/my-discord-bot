@@ -1,16 +1,8 @@
-const { EmbedBuilder } = require("discord.js");
-
-module.exports = {
+export default {
   name: "emojis",
-  description: "List all server emojis 😄",
+  description: "List all emojis in the server.",
   async execute(message) {
-    const emojis = message.guild.emojis.cache.map((e) => e.toString()).join(" ");
-    const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("😄 Server Emojis")
-      .setDescription(emojis || "No emojis in this server!")
-      .setFooter({ text: "Made by X1LLZ | discord.gg/hellz" });
-
-    message.channel.send({ embeds: [embed] });
+    const emojis = message.guild.emojis.cache.map(e => e.toString()).join(" ");
+    message.channel.send(emojis || "❌ No emojis found.");
   },
 };

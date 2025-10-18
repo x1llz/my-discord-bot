@@ -1,36 +1,22 @@
-const { EmbedBuilder } = require("discord.js");
-
-module.exports = {
+export default {
   name: "copy",
-  description: "Copy an emoji or GIF from another server ⚙️",
+  description: "Copy an emoji or sticker from another server.",
   async execute(message, args) {
-    const input = args[0];
-    if (!input) return message.reply("⚠️ You must provide an emoji or link!");
+    const emoji = args[0];
+    if (!emoji) return message.reply("❌ Please provide an emoji or emoji ID.");
 
     try {
-      let emojiURL;
-      if (input.startsWith("http")) {
-        emojiURL = input;
-      } else {
-        const match = input.match(/<?a?:?(\w+):(\d+)>?/);
-        if (!match) return message.reply("⚠️ Invalid emoji format.");
-        const [, name, id] = match;
-        emojiURL = `https://cdn.discordapp.com/emojis/${id}.png`;
-      }
+      const match = emoji.match(/<a?:\w+:(\d+)>/);
+      const emojiId = match ? match[1] : emoji;
+      const url = `https://cdn.discordapp.com/emojis/${emojiId}.png?v=1`;
 
-      const name = args[1] || "copied_emoji";
-      const newEmoji = await message.guild.emojis.create({ attachment: emojiURL, name });
+      const name = args[1] || `emoji_${emojiId}`;
+      const added = await message.guild.emojis.create({ attachment: url, name });
 
-      const embed = new EmbedBuilder()
-        .setColor("#3498db")
-        .setTitle("✅ Emoji Copied!")
-        .setDescription(`> Successfully added ${newEmoji} as **:${name}:**`)
-        .setFooter({ text: "Made by X1LLZ | discord.gg/hellz" });
-
-      message.channel.send({ embeds: [embed] });
+      message.reply(`✅ Emoji added: ${added.toString()}`);
     } catch (err) {
       console.error(err);
-      message.reply("❌ Failed to copy the emoji. Make sure I have Manage Emojis permission.");
+      message.reply("❌ Failed to copy emoji. Make sure I have permission.");
     }
   },
 };

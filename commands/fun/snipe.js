@@ -1,20 +1,20 @@
-const { EmbedBuilder } = require("discord.js");
+import { EmbedBuilder } from "discord.js";
 
-module.exports = {
+export default {
   name: "snipe",
-  description: "Show the last deleted message 🔫",
+  description: "Show the last deleted message 👀",
   async execute(message, args, client) {
-    const snipe = client.snipes.get(message.channel.id);
-    if (!snipe) return message.reply("There's nothing to snipe!");
+    const sniped = client.snipes.get(message.channel.id);
+    if (!sniped) return message.reply("❌ There's nothing to snipe here.");
 
     const embed = new EmbedBuilder()
       .setColor("#3498db")
-      .setAuthor({ name: snipe.author.tag, iconURL: snipe.author.displayAvatarURL() })
-      .setDescription(snipe.content || "*[No text message]*")
-      .setFooter({ text: new Date(snipe.time).toLocaleString() });
+      .setAuthor({ name: sniped.author.tag, iconURL: sniped.author.displayAvatarURL() })
+      .setDescription(sniped.content || "*No text*")
+      .setFooter({ text: `Deleted <t:${Math.floor(sniped.time / 1000)}:R> | Made by X1LLZ | discord.gg/hellz` });
 
-    if (snipe.image) embed.setImage(snipe.image);
+    if (sniped.image) embed.setImage(sniped.image);
 
-    message.channel.send({ embeds: [embed] });
+    return message.channel.send({ embeds: [embed] });
   },
 };

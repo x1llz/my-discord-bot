@@ -1,18 +1,21 @@
-const { EmbedBuilder } = require("discord.js");
+import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
 
-module.exports = {
+export default {
   name: "removeowner",
-  description: "Remove an owner 👑❌",
+  description: "Remove the bot owner (administrator only)",
   async execute(message, args, client) {
-    if (!client.owner) return message.reply("⚠️ There is no current owner set.");
+    if (!message.member.permissions.has(PermissionFlagsBits.Administrator))
+      return message.reply("❌ Administrator permission required.");
+
+    if (!client.owner) return message.reply("⚠️ No owner is currently set.");
 
     client.owner = null;
 
     const embed = new EmbedBuilder()
       .setColor("#3498db")
       .setTitle("❌ Owner Removed")
-      .setDescription("The bot owner has been removed.");
+      .setDescription(`Bot owner has been removed by ${message.author.tag}.`);
 
-    message.channel.send({ embeds: [embed] });
+    return message.channel.send({ embeds: [embed] });
   },
 };

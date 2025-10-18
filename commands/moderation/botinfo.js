@@ -1,9 +1,8 @@
-const { EmbedBuilder } = require("discord.js");
-const os = require("os");
+import { EmbedBuilder } from "discord.js";
 
-module.exports = {
+export default {
   name: "botinfo",
-  description: "Show bot info and stats 🤖",
+  description: "Show bot information and stats 🤖",
   async execute(message, args, client) {
     const embed = new EmbedBuilder()
       .setColor("#3498db")
@@ -13,13 +12,12 @@ module.exports = {
         { name: "ID", value: `${client.user.id}`, inline: true },
         { name: "Servers", value: `${client.guilds.cache.size}`, inline: true },
         { name: "Users", value: `${client.users.cache.size}`, inline: true },
-        { name: "Uptime", value: `${Math.floor(process.uptime()/60)}m`, inline: true },
-        { name: "Node", value: process.version, inline: true },
-        { name: "Platform", value: os.platform(), inline: true }
+        { name: "Uptime", value: `${Math.floor(process.uptime() / 60)}m`, inline: true },
+        { name: "Node", value: `${process.version}`, inline: true }
       )
       .setFooter({ text: "Made by X1LLZ | discord.gg/hellz" })
       .setTimestamp();
 
-    message.channel.send({ embeds: [embed] });
+    return message.channel.send({ embeds: [embed] });
   },
 };

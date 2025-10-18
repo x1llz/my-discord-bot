@@ -1,23 +1,26 @@
-const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
 
-module.exports = {
+export default {
   name: "unmute",
-  description: "Unmute a user 🔈",
+  description: "Remove a timeout (unmute) from a member",
   async execute(message, args) {
     if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers))
       return message.reply("❌ You don't have permission to unmute members.");
 
     const member = message.mentions.members.first();
-    if (!member) return message.reply("⚠️ Mention a user to unmute.");
+    if (!member) return message.reply("⚠️ Mention a member to unmute.");
 
-    await member.timeout(null);
-
-    const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("🔈 User Unmuted")
-      .setDescription(`**${member.user.tag}** has been unmuted.`)
-      .setFooter({ text: `Action by ${message.author.tag}` });
-
-    message.channel.send({ embeds: [embed] });
+    try {
+      await member.timeout(null);
+      const embed = new EmbedBuilder()
+        .setColor("#2ecc71")
+        .setTitle("🔈 User Unmuted")
+        .setDescription(`**${member.user.tag}** has been unmuted.`)
+        .setFooter({ text: `By ${message.author.tag}` });
+      return message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error(err);
+      return message.reply("❌ Failed to unmute the user.");
+    }
   },
 };
