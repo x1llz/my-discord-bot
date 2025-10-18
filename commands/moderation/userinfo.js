@@ -1,22 +1,22 @@
-const { EmbedBuilder } = require("discord.js");
+import { EmbedBuilder } from "discord.js";
 
-module.exports = {
+export default {
   name: "userinfo",
-  description: "Show info about a user 🧾",
-  async execute(message, args) {
-    const member = message.mentions.members.first() || message.member;
-    const user = member.user;
+  description: "Display info about a user 👤",
+  async execute(message) {
+    const user = message.mentions.users.first() || message.author;
+    const member = message.guild.members.cache.get(user.id);
+
     const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle(`${user.tag}`)
-      .addFields(
-        { name: "ID", value: `${user.id}`, inline: true },
-        { name: "Bot?", value: `${user.bot}`, inline: true },
-        { name: "Joined server", value: `<t:${Math.floor(member.joinedTimestamp/1000)}:R>`, inline: true },
-        { name: "Account created", value: `<t:${Math.floor(user.createdTimestamp/1000)}:R>`, inline: true }
-      )
+      .setColor("#9b59b6")
+      .setTitle(`👤 User Info — ${user.tag}`)
       .setThumbnail(user.displayAvatarURL({ dynamic: true }))
-      .setFooter({ text: "Made by X1LLZ | discord.gg/hellz" });
+      .addFields(
+        { name: "🪪 ID", value: user.id },
+        { name: "📆 Joined Discord", value: `<t:${Math.floor(user.createdTimestamp / 1000)}:R>` },
+        { name: "📅 Joined Server", value: `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` }
+      )
+      .setFooter({ text: "Hellz Bot | Made by x1llz" });
 
     message.channel.send({ embeds: [embed] });
   },

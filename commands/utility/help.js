@@ -1,38 +1,21 @@
-const { EmbedBuilder } = require("discord.js");
-const fs = require("fs");
-const path = require("path");
+import { EmbedBuilder } from "discord.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default {
   name: "help",
   description: "Show all available commands 💡",
+
   async execute(message) {
-    const basePath = path.join(__dirname, "..");
-    let commandsList = [];
+    const categories = ["fun", "moderation", "utility"];
+    let commandList = "";
 
-    const categories = fs.readdirSync(basePath);
     for (const category of categories) {
-      const commandFiles = fs
-        .readdirSync(path.join(basePath, category))
-        .filter((file) => file.endsWith(".js"));
+      const dir = path.join(__dirname, `../${category}`);
+      const files = fs.readdirSync(dir).filter(f => f.endsWith(".js"));
 
-      const cmds = commandFiles.map((file) => {
-        const command = require(path.join(basePath, category, file));
-        return `**+${command.name}** — ${command.description}`;
-      });
-      if (cmds.length) {
-        commandsList.push(`📁 **${category.toUpperCase()}**\n${cmds.join("\n")}`);
-      }
-    }
-
-    const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("💫 Hellz Bot Command Center 💫")
-      .setDescription(commandsList.join("\n\n"))
-      .setFooter({
-        text: "Made by X1LLZ 💻 | discord.gg/hellz",
-      })
-      .setTimestamp();
-
-    await message.channel.send({ embeds: [embed] });
-  },
-};
+      const cmds =

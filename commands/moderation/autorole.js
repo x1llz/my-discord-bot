@@ -1,23 +1,15 @@
-const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+import { PermissionFlagsBits } from "discord.js";
 
-module.exports = {
+export default {
   name: "autorole",
-  description: "Set or remove an autorole for new members 🎯",
-  async execute(message, args, client) {
+  description: "Set the auto-role for new members 🎭",
+  async execute(message, args) {
     if (!message.member.permissions.has(PermissionFlagsBits.ManageRoles))
-      return message.reply("❌ You don't have permission to manage roles.");
+      return message.reply("❌ You don’t have permission to set roles.");
 
     const role = message.mentions.roles.first();
-    if (!role) return message.reply("⚠️ Mention a role to set as autorole.");
+    if (!role) return message.reply("⚠️ Mention a role to set as auto-role.");
 
-    client.autorole = role.id;
-
-    const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("🎯 Autorole Set")
-      .setDescription(`New members will automatically receive the role **${role.name}**.`)
-      .setFooter({ text: `Configured by ${message.author.tag}` });
-
-    message.channel.send({ embeds: [embed] });
+    message.channel.send(`✅ Auto-role set to **${role.name}**.`);
   },
 };

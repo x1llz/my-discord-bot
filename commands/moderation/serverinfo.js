@@ -1,24 +1,21 @@
-const { EmbedBuilder } = require("discord.js");
+import { EmbedBuilder } from "discord.js";
 
-module.exports = {
+export default {
   name: "serverinfo",
-  description: "Show server information 🏷️",
+  description: "Show server information 🏰",
   async execute(message) {
-    const g = message.guild;
-    const owner = await g.fetchOwner().catch(()=>null);
+    const { guild } = message;
+
     const embed = new EmbedBuilder()
       .setColor("#3498db")
-      .setTitle(`Server: ${g.name}`)
+      .setTitle(`📊 Server Info — ${guild.name}`)
+      .setThumbnail(guild.iconURL({ dynamic: true }))
       .addFields(
-        { name: "ID", value: `${g.id}`, inline: true },
-        { name: "Owner", value: owner ? `${owner.user.tag}` : "Unknown", inline: true },
-        { name: "Members", value: `${g.memberCount}`, inline: true },
-        { name: "Channels", value: `${g.channels.cache.size}`, inline: true },
-        { name: "Roles", value: `${g.roles.cache.size}`, inline: true },
-        { name: "Created", value: `<t:${Math.floor(g.createdTimestamp/1000)}:R>`, inline: true }
+        { name: "👑 Owner", value: `<@${guild.ownerId}>`, inline: true },
+        { name: "👥 Members", value: `${guild.memberCount}`, inline: true },
+        { name: "🗓 Created", value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:R>`, inline: true }
       )
-      .setThumbnail(g.iconURL({ size: 512 }))
-      .setFooter({ text: "Made by X1LLZ | discord.gg/hellz" });
+      .setFooter({ text: "Hellz Bot | Made by x1llz" });
 
     message.channel.send({ embeds: [embed] });
   },
