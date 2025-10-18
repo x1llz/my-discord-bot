@@ -1,34 +1,27 @@
-import { Events } from "discord.js";
+import fs from "fs";
+import path from "path";
 
-export function registerEvents(client, prefix) {
-  client.on(Events.MessageCreate, async (message) => {
-    try {
-      // ignore bots & DMs
-      if (!message.guild || message.author.bot) return;
+export function registerEvents(client, PREFIX) {
+  const eventsPath = path.resolve("./events");
+  const eventFiles = fs.readdirSync(eventsPath).filter(f => f.endsWith(".js"));
 
-      // anti duplicate (fix double execute)
-      if (client._recentMessages.has(message.id)) return;
-      client._recentMessages.add(message.id);
-      setTimeout(() => client._recentMessages.delete(message.id), 1500);
+  const loadedEvents = new Set();
 
-      // not a command
-      if (!message.content.startsWith(prefix)) return;
+  for (const file of eventFiles) {
+    const filePath = path.join(eventsPath, file);
+    delete require.cache[filePath]; // clear cache
+    const event = require(filePath);
 
-      // parse
-      const args = message.content.slice(prefix.length).trim().split(/ +/);
-      const cmdName = args.shift()?.toLowerCase();
-      if (!cmdName) return;
+    if (!event.name || typeof event.execute !== "function") continue;
+    if (loadedEvents.has(event.name)) continue; // prevent duplicates
+    loadedEvents.add(event.name);
 
-      const command = client.commands.get(cmdName);
-      if (!command) return;
-
-      // execute once
-      await command.execute(message, args, client);
-    } catch (err) {
-      console.error("MessageCreate Error:", err);
-      try {
-        await message.reply("⚠️ Something went wrong executing that command.");
-      } catch {}
+    if (event.once) {
+      client.once(event.name, (...args) => event.execute(...args, client, PREFIX));
+    } else {
+      client.on(event.name, (...args) => event.execute(...args, client, PREFIX));
     }
-  });
+  }
+
+  console.log(`✅ Loaded ${loadedEvents.size} unique events.`);
 }

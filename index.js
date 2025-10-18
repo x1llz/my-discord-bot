@@ -1,14 +1,14 @@
 import "dotenv/config";
 import express from "express";
+import { 
+  Client, 
+  GatewayIntentBits, 
+  Partials, 
+  Collection, 
+  ActivityType 
+} from "discord.js";
+import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
-import { Client, GatewayIntentBits, Partials, Collection, ActivityType } from "discord.js";
-import { loadCommands } from "./handlers/commandHandler.js";
-import { registerEvents } from "./handlers/eventHandler.js";
-
-// Pour corriger le chemin sur Render / Node 22+
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const client = new Client({
   intents: [
@@ -17,13 +17,14 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildVoiceStates
   ],
   partials: [
     Partials.Message,
     Partials.Channel,
     Partials.Reaction,
     Partials.GuildMember,
-    Partials.User,
+    Partials.User
   ],
 });
 
@@ -34,19 +35,44 @@ client._recentMessages = new Set();
 
 const PREFIX = process.env.PREFIX || "+";
 
-// ✅ Fix du chemin absolu pour Render
-await loadCommands(client, path.join(__dirname, "commands"));
+// === Load Commands ===
+const loadCommands = (dir = "./commands") => {
+  if (!fs.existsSync(dir)) return;
+  fs.readdirSync(dir).forEach(file => {
+    const fullPath = path.join(dir, file);
+    if (fs.lstatSync(fullPath).isDirectory()) {
+      loadCommands(fullPath);
+    } else if (file.endsWith(".js")) {
+      import(`./${fullPath.replace(/\\/g, "/")}`)
+        .then(command => {
+          const cmd = command.default || command;
+          if (cmd.name && typeof cmd.execute === "function") {
+            client.commands.set(cmd.name.toLowerCase(), cmd);
+            console.log(`✅ Loaded command: ${cmd.name}`);
+          }
+        })
+        .catch(err => console.error(`❌ Error loading ${file}:`, err));
+    }
+  });
+};
+loadCommands();
+
+// === Events ===
+import { registerEvents } from "./handlers/eventHandler.js";
 registerEvents(client, PREFIX);
 
+// === Ready ===
 client.once("ready", () => {
   client.user.setActivity("discord.gg/hellz", { type: ActivityType.Playing });
   console.log(`🌸 Logged in as ${client.user.tag}`);
 });
 
-// Express keep-alive (Render)
+// === Express Keep-Alive ===
 const app = express();
-app.get("/", (req, res) => res.send("Hellz Bot alive"));
-app.listen(process.env.PORT || 3000);
+app.get("/", (req, res) => res.send("Hellz Bot is alive and running ⚡"));
+app.listen(process.env.PORT || 3000, () => {
+  console.log(`🌐 Express running on port ${process.env.PORT || 3000}`);
+});
 
-// Login
+// === Login ===
 client.login(process.env.TOKEN);
