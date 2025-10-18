@@ -1,14 +1,14 @@
 import "dotenv/config";
 import express from "express";
-import {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  Collection,
-  ActivityType,
-} from "discord.js";
-import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+import { Client, GatewayIntentBits, Partials, Collection, ActivityType } from "discord.js";
+import { loadCommands } from "./handlers/commandHandler.js";
+import { registerEvents } from "./handlers/eventHandler.js";
+
+// Pour corriger le chemin sur Render / Node 22+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const client = new Client({
   intents: [
@@ -28,54 +28,25 @@ const client = new Client({
 });
 
 client.commands = new Collection();
+client.snipes = new Map();
+client.afk = new Map();
+client._recentMessages = new Set();
+
 const PREFIX = process.env.PREFIX || "+";
 
-// === Command Loader ===
-const loadCommands = (dir = "./commands") => {
-  fs.readdirSync(dir).forEach((file) => {
-    const fullPath = path.join(dir, file);
-    if (fs.lstatSync(fullPath).isDirectory()) return loadCommands(fullPath);
-    if (file.endsWith(".js")) {
-      import(fullPath).then((cmd) => {
-        const command = cmd.default;
-        if (command?.name && typeof command.execute === "function") {
-          client.commands.set(command.name.toLowerCase(), command);
-          console.log(`✅ Command loaded: ${command.name}`);
-        }
-      }).catch((err) => console.error(`❌ Error loading ${file}:`, err));
-    }
-  });
-};
-loadCommands();
+// ✅ Fix du chemin absolu pour Render
+await loadCommands(client, path.join(__dirname, "commands"));
+registerEvents(client, PREFIX);
 
-// === Ready ===
 client.once("ready", () => {
   client.user.setActivity("discord.gg/hellz", { type: ActivityType.Playing });
   console.log(`🌸 Logged in as ${client.user.tag}`);
 });
 
-// === Message Handler ===
-client.on("messageCreate", async (message) => {
-  if (!message.guild || message.author.bot) return;
-  if (!message.content.startsWith(PREFIX)) return;
-
-  const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-  const cmdName = args.shift()?.toLowerCase();
-  const command = client.commands.get(cmdName);
-  if (!command) return;
-
-  try {
-    await command.execute(message, args, client);
-  } catch (err) {
-    console.error(err);
-    message.reply("⚠️ An error occurred while executing this command.");
-  }
-});
-
-// === Express Keep Alive ===
+// Express keep-alive (Render)
 const app = express();
-app.get("/", (req, res) => res.send("🌸 Hellz Bot is alive 🌸"));
+app.get("/", (req, res) => res.send("Hellz Bot alive"));
 app.listen(process.env.PORT || 3000);
 
-// === Login ===
+// Login
 client.login(process.env.TOKEN);
