@@ -1,24 +1,27 @@
-// commands/utility/gif.js
-const axios = require("axios");
+const { EmbedBuilder } = require("discord.js");
+const fetch = require("node-fetch");
+
 module.exports = {
   name: "gif",
-  description: "Send a GIF from Tenor / Envoie un GIF (Tenor)",
-  usage: "+gif cat",
+  description: "Search a random GIF 🎞️",
   async execute(message, args) {
     const query = args.join(" ");
-    if (!query) return message.reply("⚠️ Provide a search term / Donne un mot clé.");
-    const key = process.env.TENOR_KEY;
-    if (!key) return message.reply("⚠️ TENOR_KEY missing in .env");
+    if (!query) return message.reply("⚠️ Provide a keyword for the GIF!");
 
-    try {
-      const res = await axios.get(`https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=${key}&limit=20`);
-      const results = res.data.results;
-      if (!results || !results.length) return message.reply("😔 No GIF found / Aucun GIF trouvé.");
-      const gif = results[Math.floor(Math.random()*results.length)].media[0].gif.url;
-      message.channel.send(gif);
-    } catch (e) {
-      console.error(e);
-      message.reply("⚠️ Error fetching GIF / Erreur lors de la récupération.");
-    }
+    const API_KEY = "dc6zaTOxFJmzC"; // Public Giphy key
+    const res = await fetch(
+      `https://api.giphy.com/v1/gifs/search?q=${encodeURIComponent(query)}&api_key=${API_KEY}&limit=1`
+    );
+    const { data } = await res.json();
+
+    if (!data.length) return message.reply("No GIF found 😢");
+
+    const embed = new EmbedBuilder()
+      .setColor("#3498db")
+      .setTitle(`🎞️ GIF for "${query}"`)
+      .setImage(data[0].images.original.url)
+      .setFooter({ text: "Made by X1LLZ | discord.gg/hellz" });
+
+    message.channel.send({ embeds: [embed] });
   },
 };

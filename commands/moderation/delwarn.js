@@ -1,30 +1,26 @@
-const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
+
 const warns = new Map();
 
 module.exports = {
   name: "delwarn",
-  description: "Delete a user warning 🚫 / Supprimer un avertissement 🚫",
+  description: "Delete a specific warning from a user 🗑️",
   async execute(message, args) {
-    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers))
-      return message.reply("❌ You don’t have permission / Tu n’as pas la permission.");
-
-    const member = message.mentions.members.first();
+    const target = message.mentions.members.first();
     const index = parseInt(args[1]) - 1;
-    if (!member || isNaN(index))
-      return message.reply("⚠️ Usage: `+delwarn @user <number>`");
 
-    const userWarns = warns.get(member.id);
+    if (!target) return message.reply("⚠️ Mention a user.");
+    if (isNaN(index)) return message.reply("⚠️ Provide a warning number to delete.");
+
+    const userWarns = warns.get(target.id);
     if (!userWarns || !userWarns[index])
-      return message.reply("⚠️ Invalid warning number / Numéro invalide.");
+      return message.reply("❌ Invalid warning number.");
 
     const removed = userWarns.splice(index, 1);
-
     const embed = new EmbedBuilder()
       .setColor("#3498db")
-      .setTitle("🚫 Warning Removed / Avertissement supprimé")
-      .setDescription(`Removed warning **"${removed[0].reason}"** from **${member.user.tag}**.`)
-      .setFooter({ text: `By ${message.author.tag}` })
-      .setTimestamp();
+      .setTitle("🗑️ Warning Deleted")
+      .setDescription(`Removed warning **${removed[0].reason}** from ${target.user.tag}`);
 
     message.channel.send({ embeds: [embed] });
   },

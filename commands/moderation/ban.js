@@ -2,24 +2,22 @@ const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
   name: "ban",
-  description: "Ban a user ⛔ / Bannir un utilisateur ⛔",
+  description: "Ban a user from the server 🚫",
   async execute(message, args) {
     if (!message.member.permissions.has(PermissionFlagsBits.BanMembers))
-      return message.reply("❌ You don't have permission / Tu n’as pas la permission.");
+      return message.reply("❌ You don't have permission to ban members.");
 
-    const target = message.mentions.members.first();
-    if (!target) return message.reply("⚠️ Mention someone to ban / Mentionne quelqu’un à bannir.");
-    if (!target.bannable) return message.reply("🚫 I can’t ban this user / Je ne peux pas bannir cet utilisateur.");
+    const member = message.mentions.members.first();
+    if (!member) return message.reply("⚠️ Mention a user to ban.");
 
-    const reason = args.slice(1).join(" ") || "No reason provided / Aucune raison donnée.";
-    await target.ban({ reason });
+    const reason = args.slice(1).join(" ") || "No reason provided.";
+    await member.ban({ reason });
 
     const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("🚨 User Banned / Utilisateur banni")
-      .setDescription(`**${target.user.tag}** has been banned.\n> Reason: ${reason}`)
-      .setFooter({ text: `By ${message.author.tag}` })
-      .setTimestamp();
+      .setColor("#e74c3c")
+      .setTitle("🚫 User Banned")
+      .setDescription(`**${member.user.tag}** has been banned.\n📝 Reason: ${reason}`)
+      .setFooter({ text: `By ${message.author.tag}` });
 
     message.channel.send({ embeds: [embed] });
   },

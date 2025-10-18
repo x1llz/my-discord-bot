@@ -2,19 +2,17 @@ const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
   name: "afk",
-  description: "Set your AFK status 💤 / Mets-toi en AFK 💤",
+  description: "Set your AFK status 😴",
   async execute(message, args, client) {
-    const reason = args.join(" ") || "No reason / Aucune raison";
-
+    const reason = args.join(" ") || "No reason provided";
     client.afk.set(message.author.id, { reason, since: Date.now() });
 
     const embed = new EmbedBuilder()
-      .setColor("#4db8ff")
-      .setTitle("💤 AFK Mode Enabled / Mode AFK activé")
-      .setDescription(`> **${message.author.username}** is now AFK.\n> Reason / Raison : **${reason}**`)
-      .setFooter({ text: "Made by X1LLZ 💻 | discord.gg/hellz" })
-      .setTimestamp();
+      .setColor("#3498db")
+      .setTitle("😴 AFK Enabled")
+      .setDescription(`> You are now AFK: **${reason}**`)
+      .setFooter({ text: "Made by X1LLZ | discord.gg/hellz" });
 
-    message.reply({ embeds: [embed] });
+    message.channel.send({ embeds: [embed] });
   },
 };

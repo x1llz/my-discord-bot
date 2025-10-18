@@ -2,27 +2,25 @@ const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
   name: "unban",
-  description: "Unban a user 🔓 / Débannir un utilisateur 🔓",
+  description: "Unban a user 🕊️",
   async execute(message, args) {
     if (!message.member.permissions.has(PermissionFlagsBits.BanMembers))
-      return message.reply("❌ You don't have permission / Tu n’as pas la permission.");
+      return message.reply("❌ You don't have permission to unban members.");
 
     const userId = args[0];
-    if (!userId) return message.reply("⚠️ Provide a user ID / Donne un ID utilisateur.");
+    if (!userId) return message.reply("⚠️ Provide a valid user ID.");
 
     try {
       await message.guild.members.unban(userId);
-
       const embed = new EmbedBuilder()
         .setColor("#3498db")
-        .setTitle("🔓 User Unbanned / Utilisateur débanni")
+        .setTitle("🕊️ User Unbanned")
         .setDescription(`User with ID **${userId}** has been unbanned.`)
-        .setFooter({ text: `By ${message.author.tag}` })
-        .setTimestamp();
+        .setFooter({ text: `Action by ${message.author.tag}` });
 
       message.channel.send({ embeds: [embed] });
-    } catch (err) {
-      message.reply("❌ Could not unban / Impossible de débannir.");
+    } catch {
+      message.reply("❌ Could not unban that user. Check the ID.");
     }
   },
 };

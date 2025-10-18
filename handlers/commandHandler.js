@@ -5,26 +5,32 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function loadCommands(client, commandsPath = "./commands") {
-  const absPath = path.resolve(commandsPath);
-  const walk = (dir) => {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    for (const e of entries) {
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) walk(full);
-      else if (e.isFile() && e.name.endsWith(".js")) {
-        // dynamic import to support ESM
-        import(full + `?update=${Date.now()}`).then(mod => {
-          const command = mod.default || mod;
-          if (command?.name && typeof command.execute === "function") {
+export async function loadCommands(client, baseDir = "./commands") {
+  const commandsPath = path.resolve(__dirname, "..", baseDir);
+
+  const load = (dir) => {
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+      const filePath = path.join(dir, file);
+      const stat = fs.lstatSync(filePath);
+
+      if (stat.isDirectory()) {
+        load(filePath);
+      } else if (file.endsWith(".js")) {
+        import(`file://${filePath}`).then((cmd) => {
+          const command = cmd.default || cmd;
+          if (command.name && typeof command.execute === "function") {
             client.commands.set(command.name.toLowerCase(), command);
             console.log(`✅ Command loaded: ${command.name}`);
           } else {
-            console.warn(`⚠️ Invalid command at ${full}`);
+            console.warn(`⚠️ Invalid command structure in: ${file}`);
           }
-        }).catch(err => console.error("Import command error:", err));
+        }).catch((err) => {
+          console.error(`❌ Error loading command ${file}:`, err);
+        });
       }
     }
   };
-  walk(absPath);
+
+  load(commandsPath);
 }

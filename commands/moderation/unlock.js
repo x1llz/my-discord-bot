@@ -1,21 +1,20 @@
-const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+const { PermissionFlagsBits, EmbedBuilder } = require("discord.js");
 
 module.exports = {
   name: "unlock",
-  description: "Unlock a channel 🔓 / Déverrouiller un salon 🔓",
+  description: "Unlock a channel 🔓",
   async execute(message) {
     if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
-      return message.reply("❌ You don't have permission / Tu n’as pas la permission.");
+      return message.reply("❌ You don't have permission to unlock channels.");
 
-    const channel = message.mentions.channels.first() || message.channel;
-    await channel.permissionOverwrites.edit(message.guild.roles.everyone, { SendMessages: true });
+    await message.channel.permissionOverwrites.edit(message.guild.roles.everyone, {
+      SendMessages: true,
+    });
 
     const embed = new EmbedBuilder()
       .setColor("#3498db")
-      .setTitle("🔓 Channel Unlocked / Salon déverrouillé")
-      .setDescription(`Channel ${channel} has been unlocked!`)
-      .setFooter({ text: `By ${message.author.tag}` })
-      .setTimestamp();
+      .setTitle("🔓 Channel Unlocked")
+      .setDescription(`This channel has been unlocked by ${message.author.tag}.`);
 
     message.channel.send({ embeds: [embed] });
   },

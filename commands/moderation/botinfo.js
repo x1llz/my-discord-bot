@@ -3,20 +3,21 @@ const os = require("os");
 
 module.exports = {
   name: "botinfo",
-  description: "Display bot information 🤖",
-  async execute(message) {
+  description: "Show bot info and stats 🤖",
+  async execute(message, args, client) {
     const embed = new EmbedBuilder()
       .setColor("#3498db")
-      .setTitle("🤖 Hellz Bot Information")
+      .setTitle("🤖 Bot Information")
       .addFields(
-        { name: "💡 Developer", value: "Made by X1LLZ", inline: true },
-        { name: "🌐 Support", value: "[discord.gg/hellz](https://discord.gg/hellz)", inline: true },
-        { name: "🧠 Memory Usage", value: `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB`, inline: true },
-        { name: "🏠 Servers", value: `${message.client.guilds.cache.size}`, inline: true },
-        { name: "👥 Users", value: `${message.client.users.cache.size}`, inline: true },
-        { name: "💻 Platform", value: os.type(), inline: true },
+        { name: "Username", value: `${client.user.tag}`, inline: true },
+        { name: "ID", value: `${client.user.id}`, inline: true },
+        { name: "Servers", value: `${client.guilds.cache.size}`, inline: true },
+        { name: "Users", value: `${client.users.cache.size}`, inline: true },
+        { name: "Uptime", value: `${Math.floor(process.uptime()/60)}m`, inline: true },
+        { name: "Node", value: process.version, inline: true },
+        { name: "Platform", value: os.platform(), inline: true }
       )
-      .setFooter({ text: "Made by X1LLZ 💻 | discord.gg/hellz" })
+      .setFooter({ text: "Made by X1LLZ | discord.gg/hellz" })
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });

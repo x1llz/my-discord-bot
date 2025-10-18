@@ -1,24 +1,18 @@
-const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
-const owners = new Set();
+const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
   name: "owner",
-  description: "Add a user as co-owner 👑 / Ajouter un co-owner 👑",
-  async execute(message) {
-    if (!message.member.permissions.has(PermissionFlagsBits.Administrator))
-      return message.reply("❌ You must be an admin / Tu dois être admin.");
-
+  description: "Add an owner for the bot 👑",
+  async execute(message, args, client) {
     const user = message.mentions.users.first();
-    if (!user) return message.reply("⚠️ Mention a user / Mentionne un utilisateur.");
+    if (!user) return message.reply("⚠️ Mention a user to make them owner.");
 
-    owners.add(user.id);
+    client.owner = user.id;
 
     const embed = new EmbedBuilder()
       .setColor("#3498db")
-      .setTitle("👑 New Co-Owner Added / Nouveau co-owner ajouté")
-      .setDescription(`**${user.tag}** is now a co-owner.`)
-      .setFooter({ text: `By ${message.author.tag}` })
-      .setTimestamp();
+      .setTitle("👑 Owner Added")
+      .setDescription(`${user.tag} is now a bot owner.`);
 
     message.channel.send({ embeds: [embed] });
   },

@@ -2,18 +2,18 @@ const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
   name: "snipe",
-  description: "Retrieve the last deleted message 👀 / Récupère le dernier message supprimé 👀",
+  description: "Show the last deleted message 🔫",
   async execute(message, args, client) {
-    const sniped = client.snipes.get(message.channel.id);
-    if (!sniped)
-      return message.reply("❌ No recently deleted message / Aucun message supprimé récemment");
+    const snipe = client.snipes.get(message.channel.id);
+    if (!snipe) return message.reply("There's nothing to snipe!");
 
     const embed = new EmbedBuilder()
-      .setColor("#4db8ff")
-      .setAuthor({ name: sniped.author.tag, iconURL: sniped.author.displayAvatarURL() })
-      .setDescription(sniped.content || "*No text message / Aucun texte*")
-      .setImage(sniped.image)
-      .setFooter({ text: `🕒 ${new Date(sniped.time).toLocaleTimeString()}` });
+      .setColor("#3498db")
+      .setAuthor({ name: snipe.author.tag, iconURL: snipe.author.displayAvatarURL() })
+      .setDescription(snipe.content || "*[No text message]*")
+      .setFooter({ text: new Date(snipe.time).toLocaleString() });
+
+    if (snipe.image) embed.setImage(snipe.image);
 
     message.channel.send({ embeds: [embed] });
   },

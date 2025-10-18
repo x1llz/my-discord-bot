@@ -2,22 +2,23 @@ const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
   name: "serverinfo",
-  description: "Show server info 🏠 / Afficher les infos du serveur 🏠",
+  description: "Show server information 🏷️",
   async execute(message) {
-    const { guild } = message;
-
+    const g = message.guild;
+    const owner = await g.fetchOwner().catch(()=>null);
     const embed = new EmbedBuilder()
       .setColor("#3498db")
-      .setTitle(`🏠 Server Info — ${guild.name}`)
-      .setThumbnail(guild.iconURL({ dynamic: true }))
+      .setTitle(`Server: ${g.name}`)
       .addFields(
-        { name: "👑 Owner", value: `<@${guild.ownerId}>`, inline: true },
-        { name: "👥 Members", value: `${guild.memberCount}`, inline: true },
-        { name: "💬 Channels", value: `${guild.channels.cache.size}`, inline: true },
-        { name: "📆 Created", value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:R>`, inline: true }
+        { name: "ID", value: `${g.id}`, inline: true },
+        { name: "Owner", value: owner ? `${owner.user.tag}` : "Unknown", inline: true },
+        { name: "Members", value: `${g.memberCount}`, inline: true },
+        { name: "Channels", value: `${g.channels.cache.size}`, inline: true },
+        { name: "Roles", value: `${g.roles.cache.size}`, inline: true },
+        { name: "Created", value: `<t:${Math.floor(g.createdTimestamp/1000)}:R>`, inline: true }
       )
-      .setFooter({ text: `Requested by ${message.author.tag}` })
-      .setTimestamp();
+      .setThumbnail(g.iconURL({ size: 512 }))
+      .setFooter({ text: "Made by X1LLZ | discord.gg/hellz" });
 
     message.channel.send({ embeds: [embed] });
   },

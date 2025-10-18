@@ -2,32 +2,22 @@ const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
   name: "autorole",
-  description: "Set an automatic role for new members 🧩 / Définir un rôle automatique pour les nouveaux membres",
+  description: "Set or remove an autorole for new members 🎯",
   async execute(message, args, client) {
     if (!message.member.permissions.has(PermissionFlagsBits.ManageRoles))
-      return message.reply("❌ You don’t have permission / Tu n’as pas la permission.");
+      return message.reply("❌ You don't have permission to manage roles.");
 
     const role = message.mentions.roles.first();
-    if (!role) return message.reply("⚠️ Mention a role / Mentionne un rôle.");
+    if (!role) return message.reply("⚠️ Mention a role to set as autorole.");
 
     client.autorole = role.id;
 
     const embed = new EmbedBuilder()
       .setColor("#3498db")
-      .setTitle("🧩 Auto Role Set / Rôle automatique défini")
+      .setTitle("🎯 Autorole Set")
       .setDescription(`New members will automatically receive the role **${role.name}**.`)
-      .setFooter({ text: `Set by ${message.author.tag}` })
-      .setTimestamp();
+      .setFooter({ text: `Configured by ${message.author.tag}` });
 
     message.channel.send({ embeds: [embed] });
   },
 };
-
-// This should be placed in your main event listener:
- // client.on("guildMemberAdd", member => {
- //   const roleId = client.autorole;
- //   if (roleId) {
- //     const role = member.guild.roles.cache.get(roleId);
- //     if (role) member.roles.add(role).catch(console.error);
- //   }
- // });

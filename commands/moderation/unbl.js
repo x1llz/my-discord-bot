@@ -1,28 +1,28 @@
 const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
-const blacklist = new Set();
+const fs = require("fs");
+const path = require("path");
+const FILE = path.resolve("data","blacklist.json");
+
+function load(){ return JSON.parse(fs.readFileSync(FILE,"utf8")||"{}"); }
+function save(d){ fs.writeFileSync(FILE, JSON.stringify(d, null, 2)); }
 
 module.exports = {
   name: "unbl",
-  description: "Unblacklist a user ✅ / Retirer un utilisateur de la blacklist ✅",
-  async execute(message) {
+  description: "Remove user from blacklist 🔓",
+  async execute(message, args) {
     if (!message.member.permissions.has(PermissionFlagsBits.Administrator))
-      return message.reply("❌ You don't have permission / Tu n’as pas la permission.");
+      return message.reply("❌ You need Administrator permission.");
 
-    const userId = message.mentions.members.first()?.id || message.content.split(" ")[1];
-    if (!userId) return message.reply("⚠️ Provide a user ID / Donne un ID utilisateur.");
+    const id = args[0];
+    if (!id) return message.reply("⚠️ Provide a user ID to unblacklist.");
 
-    if (!blacklist.has(userId))
-      return message.reply("ℹ️ This user is not blacklisted / Cet utilisateur n’est pas blacklisté.");
+    const db = load();
+    if (!db[message.guild.id] || !db[message.guild.id].includes(id)) return message.reply("⚠️ ID not found in blacklist.");
 
-    blacklist.delete(userId);
+    db[message.guild.id] = db[message.guild.id].filter(x => x !== id);
+    save(db);
 
-    const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("✅ User Unblacklisted / Utilisateur retiré de la blacklist")
-      .setDescription(`User ID **${userId}** removed from blacklist.`)
-      .setFooter({ text: `By ${message.author.tag}` })
-      .setTimestamp();
-
+    const embed = new EmbedBuilder().setColor("#2ecc71").setTitle("🔓 User Unblacklisted").setDescription(`ID **${id}** removed from blacklist.`).setFooter({ text: `By ${message.author.tag}` });
     message.channel.send({ embeds: [embed] });
   },
 };

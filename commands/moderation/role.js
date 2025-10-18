@@ -2,25 +2,23 @@ const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
   name: "role",
-  description: "Give a user a role 🎭 / Donner un rôle à un utilisateur 🎭",
+  description: "Add or remove a role from a user 🎭",
   async execute(message, args) {
     if (!message.member.permissions.has(PermissionFlagsBits.ManageRoles))
-      return message.reply("❌ You don’t have permission / Tu n’as pas la permission.");
+      return message.reply("❌ You don't have permission to manage roles.");
 
     const member = message.mentions.members.first();
-    const role = message.mentions.roles.last();
+    const role = message.mentions.roles.first();
+
     if (!member || !role)
-      return message.reply("⚠️ Usage: `+role @user @role` / Exemple : `+role @user @rôle`");
+      return message.reply("⚠️ Usage: `+role @user @role`");
 
-    await member.roles.add(role);
-
-    const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("🎭 Role Added / Rôle ajouté")
-      .setDescription(`**${member.user.tag}** received the role **${role.name}**.`)
-      .setFooter({ text: `By ${message.author.tag}` })
-      .setTimestamp();
-
-    message.channel.send({ embeds: [embed] });
+    if (member.roles.cache.has(role.id)) {
+      await member.roles.remove(role);
+      message.channel.send(`❌ Removed **${role.name}** from ${member.user.tag}`);
+    } else {
+      await member.roles.add(role);
+      message.channel.send(`✅ Added **${role.name}** to ${member.user.tag}`);
+    }
   },
 };
