@@ -1,27 +1,26 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
-export function registerEvents(client, PREFIX) {
-  const eventsPath = path.resolve("./events");
-  const eventFiles = fs.readdirSync(eventsPath).filter(f => f.endsWith(".js"));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  const loadedEvents = new Set();
+export async function registerEvents(client, PREFIX) {
+  const eventsPath = path.join(__dirname, "../events");
+  const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith(".js"));
 
   for (const file of eventFiles) {
     const filePath = path.join(eventsPath, file);
-    delete require.cache[filePath]; // clear cache
-    const event = require(filePath);
+    const event = (await import(filePath)).default;
 
-    if (!event.name || typeof event.execute !== "function") continue;
-    if (loadedEvents.has(event.name)) continue; // prevent duplicates
-    loadedEvents.add(event.name);
-
-    if (event.once) {
-      client.once(event.name, (...args) => event.execute(...args, client, PREFIX));
-    } else {
-      client.on(event.name, (...args) => event.execute(...args, client, PREFIX));
+    if (event?.name) {
+      if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args, client, PREFIX));
+      } else {
+        client.on(event.name, (...args) => event.execute(...args, client, PREFIX));
+      }
     }
   }
 
-  console.log(`✅ Loaded ${loadedEvents.size} unique events.`);
+  console.log("✅ All events registered successfully!");
 }
