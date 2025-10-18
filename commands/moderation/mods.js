@@ -1,31 +1,20 @@
-const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
 
-module.exports = {
+export default {
   name: "mods",
-  description: "List server moderators (users with mod perms)",
+  description: "List all server moderators 👮",
   async execute(message) {
-    if (!message.guild) return;
-    // perms considered as moderator: KickMembers / BanMembers / ManageMessages / ModerateMembers
-    const mods = message.guild.members.cache.filter(m => {
-      try {
-        return (
-          m.permissions.has(PermissionFlagsBits.KickMembers) ||
-          m.permissions.has(PermissionFlagsBits.BanMembers) ||
-          m.permissions.has(PermissionFlagsBits.ManageMessages) ||
-          m.permissions.has(PermissionFlagsBits.ModerateMembers)
-        );
-      } catch { return false; }
-    });
+    const moderators = message.guild.members.cache.filter(m =>
+      m.permissions.has(PermissionFlagsBits.ManageMessages)
+    );
 
-    if (!mods.size) return message.reply("No moderators found.");
+    const modList = moderators.map(m => `- ${m.user.tag}`).join("\n") || "No moderators found.";
 
-    const list = mods.map(m => `${m.user.tag} — \`${m.user.id}\``).join("\n");
     const embed = new EmbedBuilder()
       .setColor("#3498db")
       .setTitle("🛡️ Server Moderators")
-      .setDescription(list)
-      .setFooter({ text: `Requested by ${message.author.tag}` })
-      .setTimestamp();
+      .setDescription(modList)
+      .setFooter({ text: "Hellz Bot | discord.gg/hellz" });
 
     message.channel.send({ embeds: [embed] });
   },

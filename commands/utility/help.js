@@ -9,13 +9,30 @@ const __dirname = path.dirname(__filename);
 export default {
   name: "help",
   description: "Show all available commands 💡",
-
   async execute(message) {
-    const categories = ["fun", "moderation", "utility"];
-    let commandList = "";
+    const folders = fs.readdirSync(path.join(__dirname, "../"));
+    let commandsList = "";
 
-    for (const category of categories) {
-      const dir = path.join(__dirname, `../${category}`);
-      const files = fs.readdirSync(dir).filter(f => f.endsWith(".js"));
+    for (const folder of folders) {
+      const files = fs
+        .readdirSync(path.join(__dirname, "../", folder))
+        .filter(f => f.endsWith(".js"));
 
-      const cmds =
+      for (const file of files) {
+        const command = await import(`../${folder}/${file}`);
+        if (command.default && command.default.name && command.default.description) {
+          commandsList += `> **+${command.default.name}** — ${command.default.description}\n`;
+        }
+      }
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor("#0099ff")
+      .setTitle("💫 Hellz Command Center")
+      .setDescription(`Hey **${message.author.username}**, here’s all my commands:\n\n${commandsList}`)
+      .setFooter({ text: "Made by X1LLZ 💻 | discord.gg/hellz" })
+      .setTimestamp();
+
+    message.channel.send({ embeds: [embed] });
+  },
+};

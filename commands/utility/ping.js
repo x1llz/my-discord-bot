@@ -1,19 +1,15 @@
-const { EmbedBuilder } = require("discord.js");
+import { EmbedBuilder } from "discord.js";
 
-module.exports = {
+export default {
   name: "ping",
-  description: "Check the bot's latency 🛰️",
+  description: "Check the bot's latency 📶",
   async execute(message) {
-    const sent = await message.channel.send("🏓 Pinging...");
-    const latency = sent.createdTimestamp - message.createdTimestamp;
-    const apiLatency = Math.round(message.client.ws.ping);
-
     const embed = new EmbedBuilder()
-      .setColor("#3498db")
+      .setColor("#00FFFF")
       .setTitle("🏓 Pong!")
-      .setDescription(`📶 **Latency:** ${latency}ms\n💻 **API:** ${apiLatency}ms`)
-      .setFooter({ text: "Made by X1LLZ | discord.gg/hellz" });
+      .setDescription(`Latency: **${Date.now() - message.createdTimestamp}ms**`)
+      .setFooter({ text: "Hellz Bot | discord.gg/hellz" });
 
-    sent.edit({ content: " ", embeds: [embed] });
+    message.channel.send({ embeds: [embed] });
   },
 };

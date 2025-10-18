@@ -1,20 +1,19 @@
-const { PermissionFlagsBits, EmbedBuilder } = require("discord.js");
+import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
 
-module.exports = {
+export default {
   name: "lock",
   description: "Lock a channel 🔒",
   async execute(message) {
     if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
       return message.reply("❌ You don't have permission to lock channels.");
 
-    await message.channel.permissionOverwrites.edit(message.guild.roles.everyone, {
-      SendMessages: false,
-    });
+    await message.channel.permissionOverwrites.edit(message.guild.id, { SendMessages: false });
 
     const embed = new EmbedBuilder()
-      .setColor("#3498db")
+      .setColor("#ff0000")
       .setTitle("🔒 Channel Locked")
-      .setDescription(`This channel has been locked by ${message.author.tag}.`);
+      .setDescription(`Channel **${message.channel.name}** has been locked.`)
+      .setFooter({ text: `Action by ${message.author.tag}` });
 
     message.channel.send({ embeds: [embed] });
   },
