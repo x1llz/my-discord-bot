@@ -1,38 +1,43 @@
-import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
 export default {
   name: "mods",
   description: "Displays all staff members and their roles 👑",
   async execute(message) {
+    // Empêche l’exécution double (souvent causée par les partials ou events dupliqués)
+    if (message._alreadyProcessed) return;
+    message._alreadyProcessed = true;
+
     const guild = message.guild;
-    if (!guild) return message.reply("⚠️ This command can only be used in a server.");
+    if (!guild) return message.reply("⚠️ This command can only be used inside a server.");
 
-    // --- CONFIG ---
     const botOwnerId = "1187100546683899995"; // 👑 ton ID Discord ici
-    const owners = guild.members.cache.filter(m =>
-      m.roles.cache.some(r => r.name.toLowerCase().includes("owner")) ||
-      m.permissions.has(PermissionFlagsBits.Administrator)
-    );
 
-    const admins = guild.members.cache.filter(m =>
-      m.permissions.has(PermissionFlagsBits.Administrator) && !owners.has(m.id)
-    );
+    // Cherche les rôles (case-insensitive)
+    const adminRole = guild.roles.cache.find(r => r.name.toLowerCase().includes("admin"));
+    const modRole = guild.roles.cache.find(r => r.name.toLowerCase().includes("mod"));
+    const ownerRole = guild.roles.cache.find(r => r.name.toLowerCase().includes("owner"));
 
-    const mods = guild.members.cache.filter(m =>
-      (m.permissions.has(PermissionFlagsBits.KickMembers) ||
-        m.permissions.has(PermissionFlagsBits.BanMembers) ||
-        m.permissions.has(PermissionFlagsBits.ModerateMembers)) &&
-      !admins.has(m.id) &&
-      !owners.has(m.id)
-    );
+    // Membres par rôles
+    const owners = ownerRole
+      ? guild.members.cache.filter(m => m.roles.cache.has(ownerRole.id))
+      : new Map();
+
+    const admins = adminRole
+      ? guild.members.cache.filter(m => m.roles.cache.has(adminRole.id))
+      : new Map();
+
+    const mods = modRole
+      ? guild.members.cache.filter(m => m.roles.cache.has(modRole.id))
+      : new Map();
 
     const botCreator = await guild.members.fetch(botOwnerId).catch(() => null);
 
-    // --- EMBED ---
+    // Embed propre
     const embed = new EmbedBuilder()
       .setColor("#2b6cb0")
       .setTitle("👑 Hellz Staff Members")
-      .setDescription("Here are all the users with moderation or administrative permissions.")
+      .setDescription("Here are all users with staff roles on this server.")
       .addFields(
         botCreator
           ? { name: "💻 Bot's Creator", value: `${botCreator.user.tag}`, inline: false }
@@ -44,6 +49,6 @@ export default {
       .setFooter({ text: "Made by X1LLZ 💻 | Hellz Bot", iconURL: message.client.user.displayAvatarURL() })
       .setTimestamp();
 
-    message.channel.send({ embeds: [embed] });
+    return message.channel.send({ embeds: [embed] });
   },
 };
