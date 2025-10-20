@@ -1,41 +1,36 @@
-import { EmbedBuilder } from "discord.js";
 import fetch from "node-fetch";
+import { EmbedBuilder } from "discord.js";
 
 export default {
   name: "gif",
-  description: "Search and send a GIF from Tenor 🎞️",
-  usage: "+gif <search>",
+  description: "Search for a random GIF using a keyword.",
+  async execute(message, args) {
+    const query = Array.isArray(args) ? args.join(" ") : args?.toString() || "";
 
-  async execute(client, message, args) {
-    const query = args.join(" ");
-    if (!query)
-      return message.reply("❌ Please provide a search term. Example: `+gif monkey`");
+    if (!query) {
+      return message.reply("❌ Please provide a search term, e.g. `+gif cat`.");
+    }
 
     try {
-      const res = await fetch(
-        `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&limit=20&key=LIVDSRZULELA`
-      );
+      const res = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=LIVDSRZULELA&limit=10`);
       const data = await res.json();
 
-      if (!data.results || data.results.length === 0)
-        return message.reply("😕 No GIFs found for that search.");
+      if (!data.results || data.results.length === 0) {
+        return message.reply(`⚠️ No GIF found for **${query}**.`);
+      }
 
-      const gif =
-        data.results[Math.floor(Math.random() * data.results.length)].media[0].gif.url;
+      const gif = data.results[Math.floor(Math.random() * data.results.length)].media_formats.gif.url;
 
       const embed = new EmbedBuilder()
-        .setColor("#00ADEF")
-        .setTitle(`🎞️ Result for "${query}"`)
+        .setColor("#00bfff")
+        .setTitle(`🎬 GIF for: ${query}`)
         .setImage(gif)
-        .setFooter({
-          text: `Requested by ${message.author.username}`,
-          iconURL: message.author.displayAvatarURL(),
-        });
+        .setFooter({ text: "Powered by Tenor", iconURL: "https://tenor.com/assets/img/favicon-32x32.png" });
 
       await message.channel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("GIF error:", err);
-      message.reply("⚠️ Something went wrong fetching the GIF.");
+      console.error("Error fetching GIF:", err);
+      return message.reply("❌ Something went wrong while fetching the GIF.");
     }
   },
 };
