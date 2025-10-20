@@ -5,23 +5,21 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function loadCommands(client, dir) {
-  const commandFolders = fs.readdirSync(dir);
+export async function loadCommands(client, dir = "./commands") {
+  const commandPath = path.join(__dirname, "../", dir);
+  const folders = fs.readdirSync(commandPath);
 
-  for (const folder of commandFolders) {
-    const folderPath = path.join(dir, folder);
-    const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith(".js"));
+  for (const folder of folders) {
+    const files = fs.readdirSync(`${commandPath}/${folder}`).filter(f => f.endsWith(".js"));
 
-    for (const file of commandFiles) {
-      const filePath = path.join(folderPath, file);
-      const command = (await import(`../${filePath.replace(/\\/g, "/")}`)).default;
-
+    for (const file of files) {
+      const command = (await import(`../${dir}/${folder}/${file}`)).default;
       if (command?.name && typeof command.execute === "function") {
-        client.commands.set(command.name, command);
+        client.commands.set(command.name.toLowerCase(), command);
         console.log(`✅ Loaded command: ${command.name}`);
+      } else {
+        console.warn(`⚠️ Invalid command structure in ${file}`);
       }
     }
   }
-
-  console.log("✅ All commands loaded successfully!");
 }

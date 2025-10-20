@@ -1,26 +1,46 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import ms from "ms";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+export function registerEvents(client, PREFIX) {
+  client.on("messageCreate", async (message) => {
+    if (!message.guild || message.author.bot) return;
 
-export async function registerEvents(client, PREFIX) {
-  const eventsPath = path.join(__dirname, "../events");
-  const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith(".js"));
+    // prevent duplicate events
+    if (client._recentMessages.has(message.id)) return;
+    client._recentMessages.add(message.id);
+    setTimeout(() => client._recentMessages.delete(message.id), 1500);
 
-  for (const file of eventFiles) {
-    const filePath = path.join(eventsPath, file);
-    const event = (await import(filePath)).default;
-
-    if (event?.name) {
-      if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args, client, PREFIX));
-      } else {
-        client.on(event.name, (...args) => event.execute(...args, client, PREFIX));
-      }
+    // handle AFK auto remove
+    if (client.afk.has(message.author.id)) {
+      const old = client.afk.get(message.author.id);
+      client.afk.delete(message.author.id);
+      message.reply(`✅ Welcome back ${message.author.username}, AFK removed (was: ${old.reason}).`);
     }
-  }
 
-  console.log("✅ All events registered successfully!");
+    // mention AFK users
+    if (message.mentions.users.size > 0) {
+      message.mentions.users.forEach((u) => {
+        if (client.afk.has(u.id)) {
+          const data = client.afk.get(u.id);
+          const minutes = Math.floor((Date.now() - data.since) / 60000);
+          message.reply(`💤 ${u.tag} is AFK: **${data.reason}** (${minutes} min ago)`);
+        }
+      });
+    }
+
+    // commands
+    if (!message.content.startsWith(PREFIX)) return;
+    const args = message.content.slice(PREFIX.length).trim().split(/ +/);
+    const cmdName = args.shift()?.toLowerCase();
+    if (!cmdName) return;
+
+    const command = client.commands.get(cmdName);
+    if (!command) return;
+
+    try {
+      await command.execute(message, args, client);
+    } catch (err) {
+      console.error("❌ Command error:", err);
+      message.reply("⚠️ An error occurred while executing this command.");
+    }
+  });
 }
