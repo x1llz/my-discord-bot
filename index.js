@@ -1,23 +1,31 @@
 import "dotenv/config";
 import express from "express";
-import { Client, GatewayIntentBits, Partials, Collection, ActivityType } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  Partials,
+  Collection,
+  ActivityType,
+} from "discord.js";
+
 import { loadCommands } from "./handlers/commandHandler.js";
 import { registerEvents } from "./handlers/eventHandler.js";
 
+// === Client configuration ===
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessageReactions
+    GatewayIntentBits.GuildMessageReactions,
   ],
   partials: [
     Partials.Message,
     Partials.Channel,
     Partials.Reaction,
     Partials.GuildMember,
-    Partials.User
+    Partials.User,
   ],
 });
 
@@ -28,20 +36,24 @@ client._recentMessages = new Set();
 
 const PREFIX = process.env.PREFIX || "+";
 
-// Load commands and events
+// === Charger les commandes ===
 await loadCommands(client, "./commands");
+
+// === Charger les événements ===
 registerEvents(client, PREFIX);
 
-// Activity
+// === Quand le bot est prêt ===
 client.once("ready", () => {
   client.user.setActivity("discord.gg/hellz", { type: ActivityType.Playing });
   console.log(`🌸 Logged in as ${client.user.tag}`);
 });
 
-// Express keep-alive for Render
+// === Express pour Render (ping serveur) ===
 const app = express();
-app.get("/", (req, res) => res.send("Hellz Bot is alive 💫"));
-app.listen(process.env.PORT || 3000);
+app.get("/", (req, res) => res.send("Hellz Bot is alive 🚀"));
+app.listen(process.env.PORT || 3000, () =>
+  console.log("🌐 Express server online")
+);
 
-// Login
+// === Lancer le bot ===
 client.login(process.env.TOKEN);
