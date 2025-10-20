@@ -1,40 +1,36 @@
-import { Events } from "discord.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function registerEvents(client, PREFIX) {
-  // Anti double execution cache
-  const processedMessages = new Set();
+  client.on("messageCreate", async message => {
+    if (!message.guild || message.author.bot) return;
 
-  client.on(Events.MessageCreate, async (message) => {
+    // Anti double exécution
+    if (client._recentMessages.has(message.id)) return;
+    client._recentMessages.add(message.id);
+    setTimeout(() => client._recentMessages.delete(message.id), 1500);
+
+    if (!message.content.startsWith(PREFIX)) return;
+
+    const args = message.content.slice(PREFIX.length).trim().split(/ +/);
+    const commandName = args.shift()?.toLowerCase();
+    const command = client.commands.get(commandName);
+
+    if (!command) return;
+
     try {
-      // Ignore bots, DMs, ou messages sans préfixe
-      if (!message.guild || message.author.bot) return;
-      if (!message.content.startsWith(PREFIX)) return;
-
-      // Anti double trigger (Render bug, slow webhook, etc.)
-      if (processedMessages.has(message.id)) return;
-      processedMessages.add(message.id);
-      setTimeout(() => processedMessages.delete(message.id), 1500);
-
-      // Récupère le nom de commande
-      const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-      const cmdName = args.shift()?.toLowerCase();
-      if (!cmdName) return;
-
-      const command = client.commands.get(cmdName);
-      if (!command) return;
-
-      // Exécution de la commande
       await command.execute(message, args, client);
     } catch (err) {
-      console.error("⚠️ Error in messageCreate handler:", err);
-      try {
-        message.reply("❌ An error occurred while executing the command.");
-      } catch {}
+      console.error(`❌ Error executing command: ${commandName}`, err);
+      message.reply("⚠️ An error occurred while executing that command.");
     }
   });
 
-  // Logs au démarrage
-  client.once(Events.ClientReady, () => {
-    console.log("✅ Event handler loaded and ready.");
+  client.once("ready", () => {
+    console.log(`🌸 Logged in as ${client.user.tag}`);
   });
 }

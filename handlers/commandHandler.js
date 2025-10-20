@@ -1,47 +1,44 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
-/**
- * Charge automatiquement toutes les commandes d'un dossier et de ses sous-dossiers.
- * Compatible avec import/export (V2).
- */
-export async function loadCommands(client, dir = "./commands") {
-  const __dirname = path.resolve();
-  const folderPath = path.join(__dirname, dir);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  if (!fs.existsSync(folderPath)) {
-    console.warn(`⚠️ Commands folder not found: ${folderPath}`);
-    return;
-  }
+export async function loadCommands(client, basePath = "./commands") {
+  const commandsPath = path.resolve(basePath);
+  const categories = fs.readdirSync(commandsPath, { withFileTypes: true });
 
-  let commandCount = 0;
+  for (const category of categories) {
+    if (category.isDirectory()) {
+      const folderPath = path.join(commandsPath, category.name);
+      const commandFiles = fs.readdirSync(folderPath).filter(f => f.endsWith(".js"));
 
-  const loadDir = async (directory) => {
-    const files = fs.readdirSync(directory);
-
-    for (const file of files) {
-      const fullPath = path.join(directory, file);
-
-      if (fs.lstatSync(fullPath).isDirectory()) {
-        await loadDir(fullPath); // Charge récursivement
-      } else if (file.endsWith(".js")) {
+      for (const file of commandFiles) {
+        const filePath = path.join(folderPath, file);
         try {
-          // Import dynamique du module ES
-          const { default: command } = await import(`file://${fullPath}`);
+          const commandModule = await import(`file://${filePath}`);
+          const command = commandModule.default || commandModule;
+          if (!command.name || typeof command.execute !== "function") continue;
 
-          if (command?.name && typeof command.execute === "function") {
-            client.commands.set(command.name.toLowerCase(), command);
-            commandCount++;
-          } else {
-            console.warn(`⚠️ Invalid command structure in ${file}`);
-          }
+          client.commands.set(command.name, command);
+          console.log(`✅ Loaded command: ${command.name}`);
         } catch (err) {
           console.error(`❌ Error loading command ${file}:`, err);
         }
       }
-    }
-  };
+    } else if (category.isFile() && category.name.endsWith(".js")) {
+      const filePath = path.join(commandsPath, category.name);
+      try {
+        const commandModule = await import(`file://${filePath}`);
+        const command = commandModule.default || commandModule;
+        if (!command.name || typeof command.execute !== "function") continue;
 
-  await loadDir(folderPath);
-  console.log(`✅ Loaded ${commandCount} commands successfully.`);
+        client.commands.set(command.name, command);
+        console.log(`✅ Loaded command: ${command.name}`);
+      } catch (err) {
+        console.error(`❌ Error loading command ${category.name}:`, err);
+      }
+    }
+  }
 }

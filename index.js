@@ -10,6 +10,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildMessageReactions,
   ],
   partials: [
@@ -28,22 +29,16 @@ client._recentMessages = new Set();
 
 const PREFIX = process.env.PREFIX || "+";
 
-// Charger les commandes et events
 await loadCommands(client, "./commands");
 registerEvents(client, PREFIX);
 
-// === Ready event ===
 client.once("ready", () => {
   client.user.setActivity("discord.gg/hellz", { type: ActivityType.Playing });
-  console.log(`🌸 Logged in as ${client.user.tag}`);
+  console.log(`🌸 Hellz Bot is online`);
 });
 
-// === Express keep-alive (Render) ===
 const app = express();
-app.get("/", (req, res) => res.send("🌸 Hellz Bot V2 is online 🌸"));
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`🌐 Web server active on port ${process.env.PORT || 3000}`);
-});
+app.get("/", (req, res) => res.send("Hellz Bot Alive"));
+app.listen(process.env.PORT || 3000);
 
-// === Bot login ===
 client.login(process.env.TOKEN);
