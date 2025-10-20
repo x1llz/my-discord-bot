@@ -7,11 +7,9 @@ import {
   Collection,
   ActivityType,
 } from "discord.js";
-
 import { loadCommands } from "./handlers/commandHandler.js";
 import { registerEvents } from "./handlers/eventHandler.js";
 
-// === Client configuration ===
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -36,24 +34,22 @@ client._recentMessages = new Set();
 
 const PREFIX = process.env.PREFIX || "+";
 
-// === Charger les commandes ===
+// === Load Commands & Events ===
 await loadCommands(client, "./commands");
-
-// === Charger les événements ===
 registerEvents(client, PREFIX);
 
-// === Quand le bot est prêt ===
+// === Bot Ready ===
 client.once("ready", () => {
   client.user.setActivity("discord.gg/hellz", { type: ActivityType.Playing });
   console.log(`🌸 Logged in as ${client.user.tag}`);
 });
 
-// === Express pour Render (ping serveur) ===
+// === Keep Alive Express Server ===
 const app = express();
-app.get("/", (req, res) => res.send("Hellz Bot is alive 🚀"));
-app.listen(process.env.PORT || 3000, () =>
-  console.log("🌐 Express server online")
-);
+app.get("/", (req, res) => res.send("🌸 Hellz Bot is running fine! 🌸"));
+app.listen(process.env.PORT || 3000, () => {
+  console.log(`✅ Web server running on port ${process.env.PORT || 3000}`);
+});
 
-// === Lancer le bot ===
+// === Login ===
 client.login(process.env.TOKEN);

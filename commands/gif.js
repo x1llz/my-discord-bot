@@ -1,39 +1,41 @@
-import fetch from "node-fetch";
 import { EmbedBuilder } from "discord.js";
+import fetch from "node-fetch";
 
 export default {
   name: "gif",
-  description: "Send a random GIF based on your search.",
+  description: "Search and send a GIF from Tenor 🎞️",
   usage: "+gif <search>",
+
   async execute(client, message, args) {
     const query = args.join(" ");
-    if (!query) {
-      return message.reply("❌ Please provide a search term! Example: `+gif cat`");
-    }
+    if (!query)
+      return message.reply("❌ Please provide a search term. Example: `+gif monkey`");
 
     try {
-      const response = await fetch(
-        `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=LIVDSRZULELA&limit=10`
+      const res = await fetch(
+        `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&limit=20&key=LIVDSRZULELA`
       );
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!data.results || data.results.length === 0) {
+      if (!data.results || data.results.length === 0)
         return message.reply("😕 No GIFs found for that search.");
-      }
 
-      const randomGif = data.results[Math.floor(Math.random() * data.results.length)];
-      const gifUrl = randomGif.media_formats.gif.url;
+      const gif =
+        data.results[Math.floor(Math.random() * data.results.length)].media[0].gif.url;
 
       const embed = new EmbedBuilder()
         .setColor("#00ADEF")
-        .setTitle(`🎞️ GIF for "${query}"`)
-        .setImage(gifUrl)
-        .setFooter({ text: `Requested by ${message.author.username}`, iconURL: message.author.displayAvatarURL() });
+        .setTitle(`🎞️ Result for "${query}"`)
+        .setImage(gif)
+        .setFooter({
+          text: `Requested by ${message.author.username}`,
+          iconURL: message.author.displayAvatarURL(),
+        });
 
-      message.channel.send({ embeds: [embed] });
-    } catch (error) {
-      console.error(error);
-      message.reply("⚠️ There was an error fetching the GIF. Please try again later.");
+      await message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error("GIF error:", err);
+      message.reply("⚠️ Something went wrong fetching the GIF.");
     }
   },
 };
