@@ -1,7 +1,7 @@
 {
   "name": "hellz-bot",
-  "version": "2.0.3",
-  "description": "Hellz Discord Bot - Clean Render Edition (Fixed node-fetch)",
+  "version": "2.0.0",
+  "description": "Hellz Discord Bot - V2",
   "main": "index.js",
   "type": "module",
   "scripts": {

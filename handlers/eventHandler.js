@@ -1,24 +1,18 @@
-export function registerEvents(client, PREFIX) {
-  client.removeAllListeners("messageCreate");
-
+export function registerEvents(client, prefix) {
   client.on("messageCreate", async (message) => {
+    if (!message.guild || message.author.bot) return;
+    if (!message.content.startsWith(prefix)) return;
+
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const cmdName = args.shift()?.toLowerCase();
+    const command = client.commands.get(cmdName);
+    if (!command) return;
+
     try {
-      if (!message.guild || message.author.bot) return;
-      if (!message.content.startsWith(PREFIX)) return;
-
-      const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-      const cmdName = args.shift()?.toLowerCase();
-      const command = client.commands.get(cmdName);
-      if (!command) return;
-
       await command.execute(message, args, client);
     } catch (error) {
-      console.error("⚠️ Command error:", error);
-      message.reply("❌ There was an error executing this command.");
+      console.error(error);
+      await message.reply("⚠️ An error occurred while executing this command.");
     }
-  });
-
-  client.once("ready", () => {
-    console.log(`✅ Event handler registered for ${client.user.tag}`);
   });
 }
