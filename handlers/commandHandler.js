@@ -1,44 +1,41 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/**
+ * Load all bot commands recursively
+ * @param {Client} client - Discord client
+ * @param {string} dir - Path to commands folder
+ */
+export async function loadCommands(client, dir = "./commands") {
+  try {
+    const commandFiles = fs.readdirSync(dir);
 
-export async function loadCommands(client, basePath = "./commands") {
-  const commandsPath = path.resolve(basePath);
-  const categories = fs.readdirSync(commandsPath, { withFileTypes: true });
+    for (const file of commandFiles) {
+      const filePath = path.join(dir, file);
+      const stat = fs.lstatSync(filePath);
 
-  for (const category of categories) {
-    if (category.isDirectory()) {
-      const folderPath = path.join(commandsPath, category.name);
-      const commandFiles = fs.readdirSync(folderPath).filter(f => f.endsWith(".js"));
-
-      for (const file of commandFiles) {
-        const filePath = path.join(folderPath, file);
-        try {
-          const commandModule = await import(`file://${filePath}`);
-          const command = commandModule.default || commandModule;
-          if (!command.name || typeof command.execute !== "function") continue;
-
-          client.commands.set(command.name, command);
-          console.log(`✅ Loaded command: ${command.name}`);
-        } catch (err) {
-          console.error(`❌ Error loading command ${file}:`, err);
-        }
+      // 📁 Load subfolders recursively
+      if (stat.isDirectory()) {
+        await loadCommands(client, filePath);
+        continue;
       }
-    } else if (category.isFile() && category.name.endsWith(".js")) {
-      const filePath = path.join(commandsPath, category.name);
-      try {
-        const commandModule = await import(`file://${filePath}`);
-        const command = commandModule.default || commandModule;
-        if (!command.name || typeof command.execute !== "function") continue;
 
-        client.commands.set(command.name, command);
-        console.log(`✅ Loaded command: ${command.name}`);
-      } catch (err) {
-        console.error(`❌ Error loading command ${category.name}:`, err);
+      // ✅ Load .js files only
+      if (!file.endsWith(".js")) continue;
+
+      // Dynamic import (ESM compatible)
+      const { default: command } = await import(`../${filePath.replace(/\\/g, "/")}`);
+
+      if (command?.name && typeof command.execute === "function") {
+        client.commands.set(command.name.toLowerCase(), command);
+        console.log(`✅ Command loaded: ${command.name}`);
+      } else {
+        console.warn(`⚠️ Invalid command file: ${file}`);
       }
     }
+
+    console.log("🎯 All commands loaded successfully!");
+  } catch (err) {
+    console.error("❌ Error loading commands:", err);
   }
 }

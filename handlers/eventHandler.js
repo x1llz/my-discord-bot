@@ -1,36 +1,38 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/**
+ * Register all event listeners
+ * @param {Client} client - Discord client
+ * @param {string} prefix - Command prefix
+ */
+export function registerEvents(client, prefix) {
+  const eventsPath = path.join(process.cwd(), "events");
 
-export function registerEvents(client, PREFIX) {
-  client.on("messageCreate", async message => {
-    if (!message.guild || message.author.bot) return;
+  if (!fs.existsSync(eventsPath)) {
+    console.warn("⚠️ No 'events' folder found. Skipping event registration.");
+    return;
+  }
 
-    // Anti double exécution
-    if (client._recentMessages.has(message.id)) return;
-    client._recentMessages.add(message.id);
-    setTimeout(() => client._recentMessages.delete(message.id), 1500);
+  const eventFiles = fs.readdirSync(eventsPath).filter((file) => file.endsWith(".js"));
 
-    if (!message.content.startsWith(PREFIX)) return;
+  for (const file of eventFiles) {
+    const filePath = path.join(eventsPath, file);
+    import(`../events/${file}`).then((eventModule) => {
+      const event = eventModule.default;
 
-    const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-    const commandName = args.shift()?.toLowerCase();
-    const command = client.commands.get(commandName);
+      if (!event || !event.name || typeof event.execute !== "function") {
+        console.warn(`⚠️ Invalid event in ${file}`);
+        return;
+      }
 
-    if (!command) return;
+      if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args, client, prefix));
+      } else {
+        client.on(event.name, (...args) => event.execute(...args, client, prefix));
+      }
 
-    try {
-      await command.execute(message, args, client);
-    } catch (err) {
-      console.error(`❌ Error executing command: ${commandName}`, err);
-      message.reply("⚠️ An error occurred while executing that command.");
-    }
-  });
-
-  client.once("ready", () => {
-    console.log(`🌸 Logged in as ${client.user.tag}`);
-  });
+      console.log(`🎧 Event loaded: ${event.name}`);
+    });
+  }
 }
