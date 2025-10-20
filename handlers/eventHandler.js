@@ -1,7 +1,6 @@
-/**
- * Event handler for message commands
- */
 export function registerEvents(client, PREFIX) {
+  client.removeAllListeners("messageCreate");
+
   client.on("messageCreate", async (message) => {
     try {
       if (!message.guild || message.author.bot) return;
@@ -10,17 +9,16 @@ export function registerEvents(client, PREFIX) {
       const args = message.content.slice(PREFIX.length).trim().split(/ +/);
       const cmdName = args.shift()?.toLowerCase();
       const command = client.commands.get(cmdName);
-
       if (!command) return;
 
-      await command.execute(client, message, args);
+      await command.execute(message, args, client);
     } catch (error) {
-      console.error("⚠️ Command execution error:", error);
-      message.reply("❌ Something went wrong executing this command.");
+      console.error("⚠️ Command error:", error);
+      message.reply("❌ There was an error executing this command.");
     }
   });
 
-  client.on("ready", () => {
-    console.log(`✅ Event system ready for ${client.user.tag}`);
+  client.once("ready", () => {
+    console.log(`✅ Event handler registered for ${client.user.tag}`);
   });
 }
