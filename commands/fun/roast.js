@@ -1,72 +1,73 @@
-const { EmbedBuilder } = require("discord.js");
+import { EmbedBuilder } from "discord.js";
 
-module.exports = {
+export default {
   name: "roast",
-  description: "🔥 Roast someone brutally (for fun)",
-
-  execute(message, args) {
-    const target = message.mentions.users.first() || message.author;
+  description: "Roast someone hard 🔥",
+  execute(message) {
+    const target =
+      message.mentions.users.first()?.username ||
+      message.content.split(" ").slice(1).join(" ") ||
+      "that goofy user";
 
     const roasts = [
-      `yo ${target.username}, u look like u be in the dictionary under "basic af" 💯`,
-      `${target.username}, u probably think ur username a hacker flex but nah 💀`,
-      `${target.username}, you built like a 240p emoji 😂`,
-      `${target.username}, u type like autocorrect gave up 😭`,
-      `bruh ${target.username}, even ur Wi-Fi disconnects from embarrassment 📶`,
-      `no offense ${target.username}, but u got the aura of a failed TikTok trend 💀`,
-      `${target.username}, ur brain running on Windows XP 🧠💻`,
-      `ayo ${target.username}, u built like a Discord bot stuck in loop 🤖`,
-      `${target.username}, u be lagging in real life ⏳`,
-      `${target.username}, u got that “update failed” energy 💀`,
-      `${target.username}, ur outfit screams "my mom picked this" 🍼`,
-      `${target.username}, even ur shadow dipped from embarrassment ☠️`,
-      `u so dry ${target.username}, even the Sahara called u competition 🏜️`,
-      `${target.username}, ur comebacks loading since 2018 🔄`,
-      `${target.username}, ur face got patch notes every week 😭`,
-      `bro ${target.username}, u couldn’t even win a staring contest with ur mirror 💀`,
-      `u talk like u buffering ${target.username} 🌀`,
-      `${target.username}, u look like the “before” pic in every ad 💊`,
-      `ngl ${target.username}, u a background character in ur own story 📺`,
-      `${target.username}, u got “free trial of personality” vibes 🧍‍♂️`,
-      `${target.username}, ur drip expired last decade 💧`,
-      `${target.username}, u built like a default Minecraft skin ⛏️`,
-      `ur humor is so dry ${target.username}, tumbleweeds start laughing first 💀`,
-      `${target.username}, u the type to lose a 1v1 against lag 💢`,
-      `ur confidence got lower ping than ur Wi-Fi ${target.username} 📶`,
-      `${target.username}, u be smelling like unbanned accounts 🦨`,
-      `ayo ${target.username}, even ur own reflection reported u 🚫`,
-      `${target.username}, ur energy = uncharged controller 🔋`,
-      `${target.username}, u so slow Google gave up searching u 🔍`,
-      `${target.username}, ur aim worse than stormtroopers 🎯`,
-      `u got “printer offline” vibes ${target.username} 🖨️`,
-      `${target.username}, ur music taste made Spotify cry 😭`,
-      `yo ${target.username}, u look like u microwave cereal 🥣`,
-      `if L’s were trophies, u’d be a champion ${target.username} 🏆`,
-      `u got more bugs than Cyberpunk 2077 ${target.username} 💻`,
-      `${target.username}, u built like a loading screen tip 💀`,
-      `bruh ${target.username}, even AI can’t generate ur personality 🤖`,
-      `${target.username}, u look like a side quest nobody asked for 🗺️`,
-      `ngl ${target.username}, u the reason tutorials exist 📘`,
-      `${target.username}, ur vibe says “insert coin to continue” 🪙`,
-      `${target.username}, ur brain needs a firmware update 🧠`,
-      `yo ${target.username}, u so extra u make math homework jealous 📚`,
-      `${target.username}, even ur pet typing "LMAOO" rn 🐶`,
-      `${target.username}, ur jokes aged like unrefrigerated milk 🥴`,
-      `no cap ${target.username}, ur personality still in beta 🧪`,
-      `u so mid ${target.username}, even the alphabet skipped ur letter 🔤`,
-      `${target.username}, ur energy screams "read-only access" 🔒`,
-      `bro ${target.username}, u the lag in every good moment 😭`,
-      `${target.username}, ur aura got 404 vibes – not found 🧩`,
-      `${target.username}, u the human version of a 3-day trial 💀`,
-      `yo ${target.username}, stay mad, stay basic, keep being u 😭`
+      `Yo ${target}, u look like u still bufferin' in real life 💀`,
+      `${target}, you be lookin’ like a Wi-Fi signal in a cave 📡`,
+      `${target}, your drip expired back in 2016 💧😂`,
+      `Damn ${target}, even ChatGPT couldn’t fix your personality 🤖`,
+      `${target}, u got the confidence of a loading screen 😭`,
+      `Bro ${target}, you so dry you make Discord TOS look fun 📜`,
+      `Yo ${target}, your jokes so cold, they caused climate change 🥶`,
+      `${target}, you built like a mobile game ad 😭📱`,
+      `${target}, you the reason YouTube added “Skip Ad” 💀`,
+      `Bruh ${target}, even your shadow left you 💀`,
+      `${target}, u look like the “before” pic in every ad ever 😭`,
+      `${target}, your rizz expired with Internet Explorer 💀`,
+      `Damn ${target}, u so broke your CashApp declined a friend request 💸`,
+      `Yo ${target}, you dress like you lost a bet 🧢`,
+      `${target}, u sound like an off-brand Discord bot 🧠`,
+      `${target}, your vibe screams “beta version” 💀`,
+      `Bro ${target}, even AI said “nah” to your personality 💀`,
+      `${target}, your fashion sense on Windows 95 level 🧥`,
+      `Damn ${target}, you so slow your brain need an update 🔄`,
+      `${target}, you be in the dictionary under “NPC” 📚`,
+      `Yo ${target}, your life a low-budget edit 💀`,
+      `${target}, even your mirror tryna ghost you 🪞💀`,
+      `Bro ${target}, you built like a tutorial level 😭`,
+      `${target}, if ugly was a crime you’d be serving life 🔒`,
+      `Yo ${target}, your energy lower than your K/D ratio 🎮`,
+      `${target}, you so fake Barbie called — she want her plastic back 💅`,
+      `Damn ${target}, you the type to lose in a single-player game 💀`,
+      `${target}, u look like u download RAM 💀💻`,
+      `Bro ${target}, your drip so bad it’s causing droughts 💧`,
+      `Yo ${target}, even NPCs got more dialogue than you 😭`,
+      `${target}, your whole aura runs on Windows XP 💀`,
+      `Damn ${target}, u look like a Roblox default with Wi-Fi lag 😭`,
+      `${target}, even your Google searches gave up 🥴`,
+      `Yo ${target}, you built like a pop-up ad 🚫`,
+      `${target}, you so broke Monopoly won’t even let you play 💸`,
+      `${target}, you a whole skill issue 💀`,
+      `${target}, you look like a TikTok filter gone wrong 📱`,
+      `Bro ${target}, u the reason Discord added report buttons 🛑`,
+      `${target}, you the background character in your own story 😭`,
+      `Damn ${target}, your face be buffering in 144p 💀`,
+      `${target}, you look like the Wi-Fi password nobody remembers 📶`,
+      `Bro ${target}, your hairline downloaded the wrong update 💀`,
+      `${target}, even your mom muted your notifications 😭`,
+      `Yo ${target}, your IQ still loading... please wait ⏳`,
+      `${target}, you built like a lag spike in real life ⚡`,
+      `Damn ${target}, you got less drip than a dry sponge 🧽`,
+      `Bro ${target}, your whole life a 404 error 💀`,
+      `${target}, your rizz got hit with a critical failure 💔`,
+      `Yo ${target}, you the type to lose in rock-paper-scissors with Siri 🤖`,
+      `${target}, you got roasted so bad the fire department showed up 🚒🔥`
     ];
 
-    const randomRoast = roasts[Math.floor(Math.random() * roasts.length)];
+    const roast = roasts[Math.floor(Math.random() * roasts.length)];
 
     const embed = new EmbedBuilder()
-      .setColor("#5865F2")
-      .setTitle("🔥 ROAST INCOMING 🔥")
-      .setDescription(randomRoast)
+      .setColor("#e74c3c")
+      .setTitle("🔥 Roast Time 🔥")
+      .setDescription(roast)
       .setFooter({ text: "Made by X1LLZ 💻 | discord.gg/hellz" })
       .setTimestamp();
 
