@@ -2,29 +2,40 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-export async function loadCommands(client, dir = "./commands") {
+/**
+ * Charge toutes les commandes dans le dossier /commands et ses sous-dossiers
+ */
+export async function loadCommands(client, baseDir = "./commands") {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  const directory = path.join(__dirname, "../commands");
+  const commandsPath = path.join(__dirname, "../commands");
 
-  const files = fs.readdirSync(directory, { withFileTypes: true });
+  async function readDirRecursively(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
 
-  for (const file of files) {
-    const fullPath = path.join(directory, file.name);
+      // Ignore fichiers cachés
+      if (entry.name.startsWith(".")) continue;
 
-    // ✅ Ignore hidden files or already loaded duplicates
-    if (file.name.startsWith(".")) continue;
+      if (entry.isDirectory()) {
+        await readDirRecursively(fullPath);
+      } else if (entry.name.endsWith(".js")) {
+        try {
+          const { default: command } = await import(fullPath + "?update=" + Date.now());
+          if (!command?.name || typeof command.execute !== "function") continue;
 
-    if (file.isDirectory()) {
-      await loadCommands(client, fullPath);
-    } else if (file.name.endsWith(".js")) {
-      // Prevent reloading duplicate command names
-      const { default: command } = await import(fullPath + "?update=" + Date.now());
-      if (command?.name && typeof command.execute === "function") {
-        if (client.commands.has(command.name.toLowerCase())) continue;
-        client.commands.set(command.name.toLowerCase(), command);
-        console.log(`🧩 Command loaded: ${command.name}`);
+          const name = command.name.toLowerCase();
+          if (client.commands.has(name)) continue;
+
+          client.commands.set(name, command);
+          console.log(`🧩 Command loaded: ${name}`);
+        } catch (err) {
+          console.error(`❌ Error loading ${entry.name}:`, err.message);
+        }
       }
     }
   }
+
+  await readDirRecursively(commandsPath);
 }
