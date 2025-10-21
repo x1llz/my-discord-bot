@@ -7,14 +7,16 @@ export function registerEvents(client, PREFIX) {
   const __dirname = path.dirname(__filename);
 
   const eventsPath = path.join(__dirname, "../events");
-  const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith(".js"));
+  const eventFiles = fs.readdirSync(eventsPath).filter(f => f.endsWith(".js"));
 
   for (const file of eventFiles) {
     import(`../events/${file}`).then(event => {
       const eventName = file.split(".")[0];
-      client.removeAllListeners(eventName); // ✅ empêche le double event
-      client.on(eventName, (...args) => event.default(client, PREFIX, ...args));
-      console.log(`✅ Event chargé : ${eventName}`);
+      client.removeAllListeners(eventName);
+      client.on(eventName, (...args) =>
+        event.default(client, PREFIX, ...args)
+      );
+      console.log(`✅ Event loaded: ${eventName}`);
     });
   }
 }
