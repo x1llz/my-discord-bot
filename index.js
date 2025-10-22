@@ -10,6 +10,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildMessageReactions,
   ],
   partials: [
@@ -28,23 +29,20 @@ client._recentMessages = new Set();
 
 const PREFIX = process.env.PREFIX || "+";
 
-// 🔄 Charger les commandes et événements
-(async () => {
-  try {
-    await loadCommands(client);
-    registerEvents(client, PREFIX);
+// load commands + events
+await loadCommands(client, "./commands");
+registerEvents(client, PREFIX);
 
-    client.once("ready", () => {
-      client.user.setActivity("discord.gg/hellz", { type: ActivityType.Playing });
-      console.log(`🌸 Logged in as ${client.user.tag}`);
-    });
+// activité fixe
+client.once("ready", () => {
+  client.user.setActivity("discord.gg/hellz", { type: ActivityType.Playing });
+  console.log(`🌸 Logged in as ${client.user.tag}`);
+});
 
-    const app = express();
-    app.get("/", (req, res) => res.send("Hellz Bot alive"));
-    app.listen(process.env.PORT || 3000, () => console.log("✅ Web server running"));
+// Express keep-alive pour Render
+const app = express();
+app.get("/", (_, res) => res.send("🌸 Hellz Bot V2 is alive 🌸"));
+app.listen(process.env.PORT || 3000);
 
-    await client.login(process.env.TOKEN);
-  } catch (error) {
-    console.error("❌ Startup error:", error);
-  }
-})();
+// connexion bot
+client.login(process.env.TOKEN);

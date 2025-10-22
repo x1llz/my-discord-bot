@@ -1,45 +1,28 @@
-// handlers/eventHandler.js
-import fs from "fs";
-import path from "path";
-import { pathToFileURL } from "url";
+export function registerEvents(client, PREFIX) {
+  client.on("messageCreate", async message => {
+    if (!message.guild || message.author.bot) return;
 
-export async function registerEvents(client, PREFIX) {
-  const eventsPath = path.resolve("./events");
-  if (!fs.existsSync(eventsPath)) return;
+    // Anti-duplication
+    if (client._recentMessages.has(message.id)) return;
+    client._recentMessages.add(message.id);
+    setTimeout(() => client._recentMessages.delete(message.id), 1500);
 
-  const eventFiles = fs.readdirSync(eventsPath).filter(f => f.endsWith(".js"));
-
-  for (const file of eventFiles) {
-    try {
-      const eventModule = await import(pathToFileURL(path.join(eventsPath, file)));
-      const event = eventModule.default;
-      if (!event?.name) continue;
-
-      if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args, client, PREFIX));
-      } else {
-        client.on(event.name, (...args) => event.execute(...args, client, PREFIX));
-      }
-
-      console.log(`✅ Event loaded: ${event.name}`);
-    } catch (err) {
-      console.error(`❌ Error loading event ${file}:`, err);
-    }
-  }
-
-  // Fallback message listener (prefix system)
-  client.on("messageCreate", async (message) => {
-    if (!message.content.startsWith(PREFIX) || message.author.bot) return;
+    if (!message.content.startsWith(PREFIX)) return;
     const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-    const commandName = args.shift()?.toLowerCase();
-    const command = client.commands.get(commandName);
+    const cmdName = args.shift()?.toLowerCase();
+
+    const command = client.commands.get(cmdName);
     if (!command) return;
 
     try {
-      await command.execute(client, message, args);
+      await command.execute(message, args, client);
     } catch (err) {
-      console.error(err);
-      message.reply("⚠️ An error occurred while executing that command.");
+      console.error(`❌ Error executing ${cmdName}:`, err);
+      message.reply("⚠️ There was an error executing this command.");
     }
+  });
+
+  client.once("ready", () => {
+    console.log("✅ Event handler active");
   });
 }
