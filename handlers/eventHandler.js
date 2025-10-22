@@ -1,17 +1,19 @@
-// src/handlers/eventHandler.js
+// handlers/eventHandler.js
 import fs from "fs";
 import path from "path";
+import { pathToFileURL } from "url";
 
-export function registerEvents(client, PREFIX) {
+export async function registerEvents(client, PREFIX) {
   const eventsPath = path.resolve("./events");
-  if (!fs.existsSync(eventsPath)) return console.warn("⚠️ No events folder found.");
+  if (!fs.existsSync(eventsPath)) return;
 
   const eventFiles = fs.readdirSync(eventsPath).filter(f => f.endsWith(".js"));
 
   for (const file of eventFiles) {
-    import(`../events/${file}`).then(eventModule => {
+    try {
+      const eventModule = await import(pathToFileURL(path.join(eventsPath, file)));
       const event = eventModule.default;
-      if (!event || !event.name) return;
+      if (!event?.name) continue;
 
       if (event.once) {
         client.once(event.name, (...args) => event.execute(...args, client, PREFIX));
@@ -20,25 +22,24 @@ export function registerEvents(client, PREFIX) {
       }
 
       console.log(`✅ Event loaded: ${event.name}`);
-    }).catch(err => console.error(`❌ Error loading event ${file}:`, err));
+    } catch (err) {
+      console.error(`❌ Error loading event ${file}:`, err);
+    }
   }
 
-  // Default messageCreate listener for prefix commands
+  // Fallback message listener (prefix system)
   client.on("messageCreate", async (message) => {
+    if (!message.content.startsWith(PREFIX) || message.author.bot) return;
+    const args = message.content.slice(PREFIX.length).trim().split(/ +/);
+    const commandName = args.shift()?.toLowerCase();
+    const command = client.commands.get(commandName);
+    if (!command) return;
+
     try {
-      if (!message.content.startsWith(PREFIX) || message.author.bot) return;
-
-      const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-      const commandName = args.shift().toLowerCase();
-      const command = client.commands.get(commandName);
-      if (!command) return;
-
       await command.execute(client, message, args);
     } catch (err) {
-      console.error("⚠️ Command error:", err);
-      if (message && message.reply) {
-        message.reply("❌ An unexpected error occurred while running that command.");
-      }
+      console.error(err);
+      message.reply("⚠️ An error occurred while executing that command.");
     }
   });
 }

@@ -1,76 +1,59 @@
-import { EmbedBuilder } from "discord.js";
-
+// commands/fun/roast.js
 export default {
   name: "roast",
-  description: "Roast someone hard 🔥",
-  execute(message) {
-    const target =
-      message.mentions.users.first()?.username ||
-      message.content.split(" ").slice(1).join(" ") ||
-      "that goofy user";
+  description: "Send a random roast 🔥",
+  async execute(client, message) {
+    const target = message.mentions.users.first() || message.author;
 
     const roasts = [
-      `Yo ${target}, u look like u still bufferin' in real life 💀`,
-      `${target}, you be lookin’ like a Wi-Fi signal in a cave 📡`,
-      `${target}, your drip expired back in 2016 💧😂`,
-      `Damn ${target}, even ChatGPT couldn’t fix your personality 🤖`,
-      `${target}, u got the confidence of a loading screen 😭`,
-      `Bro ${target}, you so dry you make Discord TOS look fun 📜`,
-      `Yo ${target}, your jokes so cold, they caused climate change 🥶`,
-      `${target}, you built like a mobile game ad 😭📱`,
-      `${target}, you the reason YouTube added “Skip Ad” 💀`,
-      `Bruh ${target}, even your shadow left you 💀`,
-      `${target}, u look like the “before” pic in every ad ever 😭`,
-      `${target}, your rizz expired with Internet Explorer 💀`,
-      `Damn ${target}, u so broke your CashApp declined a friend request 💸`,
-      `Yo ${target}, you dress like you lost a bet 🧢`,
-      `${target}, u sound like an off-brand Discord bot 🧠`,
-      `${target}, your vibe screams “beta version” 💀`,
-      `Bro ${target}, even AI said “nah” to your personality 💀`,
-      `${target}, your fashion sense on Windows 95 level 🧥`,
-      `Damn ${target}, you so slow your brain need an update 🔄`,
-      `${target}, you be in the dictionary under “NPC” 📚`,
-      `Yo ${target}, your life a low-budget edit 💀`,
-      `${target}, even your mirror tryna ghost you 🪞💀`,
-      `Bro ${target}, you built like a tutorial level 😭`,
-      `${target}, if ugly was a crime you’d be serving life 🔒`,
-      `Yo ${target}, your energy lower than your K/D ratio 🎮`,
-      `${target}, you so fake Barbie called — she want her plastic back 💅`,
-      `Damn ${target}, you the type to lose in a single-player game 💀`,
-      `${target}, u look like u download RAM 💀💻`,
-      `Bro ${target}, your drip so bad it’s causing droughts 💧`,
-      `Yo ${target}, even NPCs got more dialogue than you 😭`,
-      `${target}, your whole aura runs on Windows XP 💀`,
-      `Damn ${target}, u look like a Roblox default with Wi-Fi lag 😭`,
-      `${target}, even your Google searches gave up 🥴`,
-      `Yo ${target}, you built like a pop-up ad 🚫`,
-      `${target}, you so broke Monopoly won’t even let you play 💸`,
-      `${target}, you a whole skill issue 💀`,
-      `${target}, you look like a TikTok filter gone wrong 📱`,
-      `Bro ${target}, u the reason Discord added report buttons 🛑`,
-      `${target}, you the background character in your own story 😭`,
-      `Damn ${target}, your face be buffering in 144p 💀`,
-      `${target}, you look like the Wi-Fi password nobody remembers 📶`,
-      `Bro ${target}, your hairline downloaded the wrong update 💀`,
-      `${target}, even your mom muted your notifications 😭`,
-      `Yo ${target}, your IQ still loading... please wait ⏳`,
-      `${target}, you built like a lag spike in real life ⚡`,
-      `Damn ${target}, you got less drip than a dry sponge 🧽`,
-      `Bro ${target}, your whole life a 404 error 💀`,
-      `${target}, your rizz got hit with a critical failure 💔`,
-      `Yo ${target}, you the type to lose in rock-paper-scissors with Siri 🤖`,
-      `${target}, you got roasted so bad the fire department showed up 🚒🔥`
+      `Yo ${target}, you look like lag in human form 💀`,
+      `${target}, you probably think “WiFi” stands for “Why Fight” 😂`,
+      `Even AI gave up trying to understand you 🤖❌`,
+      `You're like an update that breaks everything 💻💥`,
+      `${target}, you could lose a 1v1 against a Minecraft chicken 🐔`,
+      `You're so fake Barbie got jealous 🪆`,
+      `If stupidity was a sport, you’d have a gold medal 🥇`,
+      `You're like a bug that survived every patch 💀`,
+      `Bro, even Discord bots have more personality than you 😭`,
+      `You look like you still rage-quit UNO 💀`,
+      `Your energy could crash a server ⚡`,
+      `You’re like an NPC that forgot its dialogue halfway 💬💀`,
+      `Your brain’s still buffering… please wait ⏳`,
+      `You’re proof that evolution takes breaks 😭`,
+      `You make Windows updates look fast 💾`,
+      `Your style expired when Vine died 📉`,
+      `You built like a corrupted save file 💾💀`,
+      `You're the human version of a 404 error 🚫`,
+      `Even my ping is lower than your IQ 🧠`,
+      `You're what happens when lag meets bad WiFi 🌐💀`,
+      `If cringe was a currency, you’d be a billionaire 💸`,
+      `You could trip over a wireless signal 📡`,
+      `Even Google can’t find your logic 🔍`,
+      `You're the DLC nobody asked for 😭`,
+      `You're like a meme from 2012 — dead but still here 🪦`,
+      `You're the patch note that says “fixed nothing” 🧩`,
+      `You're like an empty server — no one’s joining 😭`,
+      `You're the reason the term “skill issue” exists 💀`,
+      `Even your reflection logs out 💬`,
+      `You're basically a mobile game ad 📱`,
+      `You look like you skipped the tutorial and it shows 😭`,
+      `If brain cells were pixels, you'd still be 144p 💻`,
+      `You're a walking 0 kb file 📂`,
+      `Your aim in life is like your aim in game — nonexistent 🎯`,
+      `You're like an old meme — nobody laughs anymore 😭`,
+      `You talk like a patch note nobody reads 🧾`,
+      `Even your shadow left the chat 👻`,
+      `You're built like lag incarnate 🌐`,
+      `You're the NPC in a cutscene — silent and useless 💀`,
+      `You're so dry the Sahara filed a copyright claim 🌵`,
+      `You're like a Windows error popup — annoying and constant 💢`,
+      `If stupidity was contagious, you'd be the pandemic 😭`,
+      `You're a low-effort copy of your own personality 💀`,
+      `You built like a Discord emoji with no server permissions 🚫`,
+      `Even your autocorrect stopped trying ✍️`
     ];
 
     const roast = roasts[Math.floor(Math.random() * roasts.length)];
-
-    const embed = new EmbedBuilder()
-      .setColor("#e74c3c")
-      .setTitle("🔥 Roast Time 🔥")
-      .setDescription(roast)
-      .setFooter({ text: "Made by X1LLZ 💻 | discord.gg/hellz" })
-      .setTimestamp();
-
-    message.channel.send({ embeds: [embed] });
-  },
+    await message.reply(roast);
+  }
 };
