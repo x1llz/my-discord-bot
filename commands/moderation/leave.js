@@ -1,49 +1,43 @@
-import { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } from "discord.js";
+const { SlashCommandBuilder } = require("discord.js");
 
-export default {
-  name: "leave",
-  description: "Make the bot leave a server (Owner only) 🚪",
-  async execute(message) {
-    const ownerId = "1187100546683899995"; // ton ID Discord
-    if (message.author.id !== ownerId)
-      return message.reply("❌ Only the bot owner can use this command.");
+const ownerId = "1187100546683899995";
 
-    const guilds = [...message.client.guilds.cache.values()];
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("leave")
+    .setDescription("Force the bot to leave a specific server (bot owner only).")
+    .addStringOption((option) =>
+      option.setName("serverid").setDescription("Server ID to leave").setRequired(true)
+    )
+    .setDMPermission(false),
 
-    if (!guilds.length)
-      return message.reply("⚠️ The bot is not in any server.");
+  async execute(interaction) {
+    if (interaction.user.id !== ownerId)
+      return interaction.reply({
+        content: "❌ Only the bot owner can use this command.",
+        ephemeral: true,
+      });
 
-    const menu = new StringSelectMenuBuilder()
-      .setCustomId("select_leave_guild")
-      .setPlaceholder("Select a server to leave")
-      .addOptions(
-        guilds.map(g => ({
-          label: g.name.substring(0, 100),
-          value: g.id,
-        }))
-      );
+    const serverId = interaction.options.getString("serverid");
+    const guild = interaction.client.guilds.cache.get(serverId);
 
-    const row = new ActionRowBuilder().addComponents(menu);
-    const embed = new EmbedBuilder()
-      .setColor("#e74c3c")
-      .setTitle("🚪 Leave Server")
-      .setDescription("Select a server below for the bot to leave it.")
-      .setFooter({ text: "Hellz V2 | Owner Panel" });
+    if (!guild)
+      return interaction.reply({
+        content: "⚠️ The bot is not in that server.",
+        ephemeral: true,
+      });
 
-    const msg = await message.channel.send({ embeds: [embed], components: [row] });
-
-    const collector = msg.createMessageComponentCollector({
-      filter: (i) => i.user.id === message.author.id,
-      time: 30000,
-    });
-
-    collector.on("collect", async (interaction) => {
-      const guild = message.client.guilds.cache.get(interaction.values[0]);
-      if (!guild)
-        return interaction.reply({ content: "❌ Server not found.", ephemeral: true });
-
+    try {
       await guild.leave();
-      await interaction.reply({ content: `✅ Left server **${guild.name}**`, ephemeral: true });
-    });
+      await interaction.reply({
+        content: `🚪 Successfully left **${guild.name}** (${serverId}).`,
+      });
+    } catch (err) {
+      console.error(err);
+      await interaction.reply({
+        content: "❌ Failed to leave the server.",
+        ephemeral: true,
+      });
+    }
   },
 };

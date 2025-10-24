@@ -1,50 +1,48 @@
-import fetch from "node-fetch";
-import { EmbedBuilder } from "discord.js";
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const https = require("https");
 
-export default {
-  name: "gif",
-  description: "Send a random GIF from Tenor 🎞️",
-  async execute(message, args) {
-    const query = args.join(" ");
-    if (!query)
-      return message.reply("⚠️ Please specify a keyword. Example: `+gif cat`");
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("gif")
+    .setDescription("Send a random GIF based on your keyword 🎞️")
+    .addStringOption((opt) =>
+      opt
+        .setName("search")
+        .setDescription("What type of gif do you want? (ex: monkey, cat, anime, love...)")
+        .setRequired(true)
+    ),
 
-    const apiKey = process.env.TENOR_KEY;
-    if (!apiKey)
-      return message.reply("❌ Missing TENOR_KEY in your `.env` file.");
+  async execute(interaction) {
+    const query = interaction.options.getString("search");
+    const url = `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=LIVDSRZULELA&limit=10`;
 
-    try {
-      const response = await fetch(
-        `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(
-          query
-        )}&key=${apiKey}&client_key=discord-bot&limit=10`
-      );
+    https
+      .get(url, (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          try {
+            const json = JSON.parse(data);
+            if (!json.results || json.results.length === 0)
+              return interaction.reply({ content: "❌ No GIFs found.", ephemeral: true });
 
-      if (!response.ok) {
-        console.error("Tenor API error:", response.status);
-        return message.reply("⚠️ Failed to fetch GIFs. Try again later.");
-      }
+            const random = json.results[Math.floor(Math.random() * json.results.length)];
+            const gifUrl = random.media_formats.gif.url;
 
-      const data = await response.json();
-      if (!data.results || data.results.length === 0)
-        return message.reply("😔 No results found for that search.");
+            const embed = new EmbedBuilder()
+              .setColor("Aqua")
+              .setTitle(`🎞️ Random "${query}" GIF`)
+              .setImage(gifUrl)
+              .setFooter({ text: `Requested by ${interaction.user.username}` });
 
-      const gif =
-        data.results[Math.floor(Math.random() * data.results.length)].media_formats.gif.url;
-
-      const embed = new EmbedBuilder()
-        .setColor("#5865F2")
-        .setTitle(`🎬 GIF result for: ${query}`)
-        .setImage(gif)
-        .setFooter({
-          text: `Requested by ${message.author.tag}`,
-          iconURL: message.author.displayAvatarURL({ dynamic: true }),
+            interaction.reply({ embeds: [embed] });
+          } catch {
+            interaction.reply({ content: "⚠️ Error loading GIF.", ephemeral: true });
+          }
         });
-
-      await message.channel.send({ embeds: [embed] });
-    } catch (error) {
-      console.error("GIF command error:", error);
-      message.reply("❌ There was an error fetching the GIF.");
-    }
+      })
+      .on("error", () => {
+        interaction.reply({ content: "⚠️ GIF request failed.", ephemeral: true });
+      });
   },
 };

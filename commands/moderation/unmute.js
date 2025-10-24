@@ -1,26 +1,28 @@
-import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
-export default {
-  name: "unmute",
-  description: "Remove a timeout (unmute) from a member",
-  async execute(message, args) {
-    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers))
-      return message.reply("❌ You don't have permission to unmute members.");
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("unmute")
+    .setDescription("Remove timeout (unmute) from a user.")
+    .addUserOption((option) =>
+      option.setName("target").setDescription("Select a user to unmute").setRequired(true)
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+    .setDMPermission(false),
 
-    const member = message.mentions.members.first();
-    if (!member) return message.reply("⚠️ Mention a member to unmute.");
+  async execute(interaction) {
+    const user = interaction.options.getUser("target");
+    const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+
+    if (!member)
+      return interaction.reply({ content: "User not found.", ephemeral: true });
 
     try {
       await member.timeout(null);
-      const embed = new EmbedBuilder()
-        .setColor("#2ecc71")
-        .setTitle("🔈 User Unmuted")
-        .setDescription(`**${member.user.tag}** has been unmuted.`)
-        .setFooter({ text: `By ${message.author.tag}` });
-      return message.channel.send({ embeds: [embed] });
+      await interaction.reply({ content: `🔊 **${user.tag}** has been unmuted.` });
     } catch (err) {
       console.error(err);
-      return message.reply("❌ Failed to unmute the user.");
+      await interaction.reply({ content: "Couldn't unmute this user.", ephemeral: true });
     }
   },
 };

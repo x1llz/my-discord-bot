@@ -1,9 +1,25 @@
-import "dotenv/config";
-import express from "express";
-import { Client, GatewayIntentBits, Partials, Collection, ActivityType } from "discord.js";
-import { loadCommands } from "./handlers/commandHandler.js";
-import { registerEvents } from "./handlers/eventHandler.js";
+require("dotenv").config();
+const fs = require("fs");
+const express = require("express");
+const {
+  Client,
+  Collection,
+  GatewayIntentBits,
+  Partials,
+  ActivityType,
+} = require("discord.js");
+const { loadCommands } = require("./handlers/commandHandler");
+const { loadEvents } = require("./handlers/eventHandler");
 
+// === Express Keep-Alive (for Render or local use) ===
+const app = express();
+const PORT = process.env.PORT || 3001; // Auto-detect port (Render sets its own)
+app.get("/", (_, res) => res.send("🌊 Hellz Bot is running."));
+app.listen(PORT, () =>
+  console.log(`✅ Express server ready on port ${PORT}`)
+);
+
+// === Discord Client Setup ===
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -11,38 +27,29 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.GuildMessageReactions,
   ],
   partials: [
     Partials.Message,
     Partials.Channel,
     Partials.Reaction,
-    Partials.GuildMember,
     Partials.User,
   ],
 });
 
 client.commands = new Collection();
-client.snipes = new Map();
-client.afk = new Map();
-client._recentMessages = new Set();
+client.cooldowns = new Collection();
 
-const PREFIX = process.env.PREFIX || "+";
+// === Load handlers ===
+loadCommands(client);
+loadEvents(client);
 
-// load commands + events
-await loadCommands(client, "./commands");
-registerEvents(client, PREFIX);
-
-// activité fixe
+// === Presence + Login ===
 client.once("ready", () => {
-  client.user.setActivity("discord.gg/hellz", { type: ActivityType.Playing });
-  console.log(`🌸 Logged in as ${client.user.tag}`);
+  console.log(`✅ Logged in as ${client.user.tag}`);
+  client.user.setPresence({
+    activities: [{ name: "/help .gg/hellz", type: ActivityType.Playing }],
+    status: "online",
+  });
 });
 
-// Express keep-alive pour Render
-const app = express();
-app.get("/", (_, res) => res.send("🌸 Hellz Bot V2 is alive 🌸"));
-app.listen(process.env.PORT || 3000);
-
-// connexion bot
 client.login(process.env.TOKEN);

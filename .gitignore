@@ -1,34 +1,28 @@
-# === Node / Discord Bot Git Ignore ===
-
-# Node modules (never commit dependencies)
+# === Node modules ===
 node_modules/
 
-# Environment files (keep secrets private)
+# === Environment files ===
 .env
 .env.local
 .env.production
 .env.development
 
-# Logs
-logs
+# === Logs ===
+hellz.log
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# OS files
+# === Data JSONs ===
+warnings.json
+autorole.json
+family.json
+
+# === Local config / system files ===
 .DS_Store
 Thumbs.db
-
-# Build / cache
-dist/
-build/
-.cache/
-.tmp/
-
-# VSCode settings
+.idea/
 .vscode/
 
-# Local files
-*.sqlite
-*.db
+# === Build / temp files ===
+dist/
+temp/
+.cache/

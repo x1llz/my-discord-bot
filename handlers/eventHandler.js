@@ -1,28 +1,22 @@
-export function registerEvents(client, PREFIX) {
-  client.on("messageCreate", async message => {
-    if (!message.guild || message.author.bot) return;
+const fs = require("fs");
+const path = require("path");
 
-    // Anti-duplication
-    if (client._recentMessages.has(message.id)) return;
-    client._recentMessages.add(message.id);
-    setTimeout(() => client._recentMessages.delete(message.id), 1500);
+function loadEvents(client) {
+  const eventsDir = path.join(__dirname, "../events");
 
-    if (!message.content.startsWith(PREFIX)) return;
-    const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-    const cmdName = args.shift()?.toLowerCase();
+  const categories = fs.readdirSync(eventsDir);
+  for (const category of categories) {
+    const folder = path.join(eventsDir, category);
+    const files = fs.readdirSync(folder).filter((f) => f.endsWith(".js"));
 
-    const command = client.commands.get(cmdName);
-    if (!command) return;
-
-    try {
-      await command.execute(message, args, client);
-    } catch (err) {
-      console.error(`❌ Error executing ${cmdName}:`, err);
-      message.reply("⚠️ There was an error executing this command.");
+    for (const file of files) {
+      const event = require(path.join(folder, file));
+      if (event.once)
+        client.once(event.name, (...args) => event.execute(...args, client));
+      else client.on(event.name, (...args) => event.execute(...args, client));
     }
-  });
-
-  client.once("ready", () => {
-    console.log("✅ Event handler active");
-  });
+  }
+  console.log("✅ Events loaded.");
 }
+
+module.exports = { loadEvents };

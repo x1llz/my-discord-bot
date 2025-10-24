@@ -1,26 +1,26 @@
-import { PermissionFlagsBits, EmbedBuilder } from "discord.js";
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
-export default {
-  name: "unlock",
-  description: "Unlock the current channel 🔓",
-  async execute(message) {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
-      return message.reply("❌ You don't have permission to unlock channels.");
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("unlock")
+    .setDescription("Unlock the current channel for everyone.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
+    .setDMPermission(false),
+
+  async execute(interaction) {
+    const channel = interaction.channel;
 
     try {
-      await message.channel.permissionOverwrites.edit(message.guild.roles.everyone, {
+      await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
         SendMessages: true,
       });
 
-      const embed = new EmbedBuilder()
-        .setColor("#3498db")
-        .setTitle("🔓 Channel Unlocked")
-        .setDescription(`Channel unlocked by ${message.author.tag}.`);
-
-      return message.channel.send({ embeds: [embed] });
+      await interaction.reply({
+        content: `🔓 Channel **${channel.name}** has been unlocked.`,
+      });
     } catch (err) {
       console.error(err);
-      return message.reply("❌ Failed to unlock the channel.");
+      await interaction.reply({ content: "Failed to unlock this channel.", ephemeral: true });
     }
   },
 };

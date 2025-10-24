@@ -1,23 +1,30 @@
-import { EmbedBuilder } from "discord.js";
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const fs = require("fs");
+const path = require("path");
 
-export default {
-  name: "commands",
-  description: "List all loaded commands 🔎 (alias of help)",
-  async execute(message) {
-    const cmds = message.client.commands;
-    if (!cmds || !cmds.size) return message.reply("No commands loaded.");
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("commands")
+    .setDescription("Show all available commands (visible only to you).")
+    .setDMPermission(true),
 
-    const list = Array.from(cmds.values())
-      .map(c => `• \`+${c.name}\` — ${c.description || "No description"}`)
-      .join("\n");
+  async execute(interaction) {
+    const basePath = path.join(__dirname, "..");
+    const categories = fs.readdirSync(basePath);
 
     const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("📚 All Commands")
-      .setDescription(list)
-      .setFooter({ text: `Requested by ${message.author.tag} | Made by X1LLZ` })
-      .setTimestamp();
+      .setColor("Blue")
+      .setTitle("📜 Hellz Commands List");
 
-    return message.channel.send({ embeds: [embed] });
+    for (const category of categories) {
+      const folder = path.join(basePath, category);
+      if (!fs.statSync(folder).isDirectory()) continue;
+
+      const files = fs.readdirSync(folder).filter((f) => f.endsWith(".js"));
+      const names = files.map((f) => `/${f.replace(".js", "")}`);
+      embed.addFields({ name: category.toUpperCase(), value: names.join(", ") || "None" });
+    }
+
+    await interaction.reply({ embeds: [embed], ephemeral: true });
   },
 };

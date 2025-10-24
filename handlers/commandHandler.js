@@ -1,41 +1,71 @@
-import fs from "fs";
-import path from "path";
-import { pathToFileURL, fileURLToPath } from "url";
+const fs = require("fs");
+const path = require("path");
+const { REST, Routes } = require("discord.js");
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+async function loadCommands(client) {
+  const commands = [];
+  const commandsPath = path.join(__dirname, "../commands");
 
-export async function loadCommands(client, dir = "./commands") {
-  const basePath = path.join(__dirname, "..", dir);
-  if (!fs.existsSync(basePath)) return;
+  const folders = fs.readdirSync(commandsPath);
+  console.log("📂 Scanning command folders:", folders);
 
-  const entries = fs.readdirSync(basePath);
-  for (const entry of entries) {
-    const fullPath = path.join(basePath, entry);
-    const stat = fs.lstatSync(fullPath);
+  for (const folder of folders) {
+    const folderPath = path.join(commandsPath, folder);
 
-    // 📂 si c’est un dossier
-    if (stat.isDirectory()) {
-      const files = fs.readdirSync(fullPath).filter(f => f.endsWith(".js"));
+    if (fs.statSync(folderPath).isDirectory()) {
+      const files = fs.readdirSync(folderPath).filter((f) => f.endsWith(".js"));
       for (const file of files) {
-        const filePath = path.join(fullPath, file);
-        const commandModule = await import(pathToFileURL(filePath).href);
-        const command = commandModule.default;
-        if (command?.name && typeof command.execute === "function") {
-          client.commands.set(command.name.toLowerCase(), command);
-          console.log(`✅ Loaded command: ${command.name}`);
+        const filePath = path.join(folderPath, file);
+        try {
+          const cmd = require(filePath);
+          if (cmd.data && cmd.execute) {
+            client.commands.set(cmd.data.name, cmd);
+            commands.push(cmd.data.toJSON());
+            console.log(`✅ Loaded: ${folder}/${file}`);
+          } else {
+            console.warn(`⚠️ Skipped (invalid format): ${folder}/${file}`);
+          }
+        } catch (err) {
+          console.error(`❌ Error loading ${folder}/${file}:`, err.message);
         }
       }
-    }
-
-    // 📄 si c’est un fichier JS directement (ex: copy.js)
-    else if (entry.endsWith(".js")) {
-      const commandModule = await import(pathToFileURL(fullPath).href);
-      const command = commandModule.default;
-      if (command?.name && typeof command.execute === "function") {
-        client.commands.set(command.name.toLowerCase(), command);
-        console.log(`✅ Loaded command: ${command.name}`);
+    } else if (folder.endsWith(".js")) {
+      const cmd = require(path.join(commandsPath, folder));
+      if (cmd.data && cmd.execute) {
+        client.commands.set(cmd.data.name, cmd);
+        commands.push(cmd.data.toJSON());
+        console.log(`✅ Loaded: ${folder}`);
       }
     }
   }
+
+  console.log(`\n📋 ${commands.length} commands ready to register individually.`);
+
+  const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+
+  try {
+    console.log("🚀 Registering slash commands one by one...\n");
+
+    for (const cmd of commands) {
+      try {
+        await rest.post(
+          Routes.applicationGuildCommands(
+            process.env.CLIENT_ID,
+            process.env.GUILD_ID
+          ),
+          { body: cmd }
+        );
+        console.log(`✅ Registered: /${cmd.name}`);
+      } catch (err) {
+        console.error(`❌ Failed to register: /${cmd.name}`);
+        console.error("Reason:", err.rawError || err);
+      }
+    }
+
+    console.log("\n🎯 Slash registration complete!");
+  } catch (err) {
+    console.error("❌ Fatal error registering commands:", err);
+  }
 }
+
+module.exports = { loadCommands };

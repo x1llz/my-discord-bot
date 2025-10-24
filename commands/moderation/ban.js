@@ -1,24 +1,33 @@
-import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
-export default {
-  name: "ban",
-  description: "Ban a user from the server 🔨",
-  async execute(message, args) {
-    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers))
-      return message.reply("❌ You don’t have permission to ban members.");
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("ban")
+    .setDescription("Ban a user from the server.")
+    .addUserOption((option) =>
+      option.setName("target").setDescription("Select the user to ban").setRequired(true)
+    )
+    .addStringOption((option) =>
+      option.setName("reason").setDescription("Reason for the ban").setRequired(false)
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
+    .setDMPermission(false),
 
-    const member = message.mentions.members.first();
-    if (!member) return message.reply("⚠️ Mention a user to ban.");
+  async execute(interaction) {
+    const user = interaction.options.getUser("target");
+    const reason = interaction.options.getString("reason") || "No reason provided.";
 
-    const reason = args.slice(1).join(" ") || "No reason provided.";
+    const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+    if (!member)
+      return interaction.reply({ content: "User not found in this server.", ephemeral: true });
+
+    if (!member.bannable)
+      return interaction.reply({ content: "I can't ban this user.", ephemeral: true });
+
     await member.ban({ reason });
 
-    const embed = new EmbedBuilder()
-      .setColor("#e74c3c")
-      .setTitle("🚫 User Banned")
-      .setDescription(`**${member.user.tag}** has been banned.\n> Reason: ${reason}`)
-      .setFooter({ text: `By ${message.author.tag}` });
-
-    message.channel.send({ embeds: [embed] });
+    await interaction.reply({
+      content: `🔨 **${user.tag}** has been banned.\nReason: ${reason}`,
+    });
   },
 };

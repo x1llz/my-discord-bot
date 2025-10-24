@@ -1,24 +1,37 @@
-import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
-export default {
-  name: "kick",
-  description: "Kick a user from the server 👢",
-  async execute(message, args) {
-    if (!message.member.permissions.has(PermissionFlagsBits.KickMembers))
-      return message.reply("❌ You don’t have permission to kick members.");
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("kick")
+    .setDescription("Kick a member from the server.")
+    .addUserOption((option) =>
+      option.setName("target").setDescription("Select a user to kick").setRequired(true)
+    )
+    .addStringOption((option) =>
+      option.setName("reason").setDescription("Reason for the kick").setRequired(false)
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers)
+    .setDMPermission(false),
 
-    const member = message.mentions.members.first();
-    if (!member) return message.reply("⚠️ Mention a user to kick.");
+  async execute(interaction) {
+    const user = interaction.options.getUser("target");
+    const reason = interaction.options.getString("reason") || "No reason provided.";
 
-    const reason = args.slice(1).join(" ") || "No reason provided.";
-    await member.kick(reason);
+    const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+    if (!member)
+      return interaction.reply({ content: "User not found.", ephemeral: true });
 
-    const embed = new EmbedBuilder()
-      .setColor("#f39c12")
-      .setTitle("👢 User Kicked")
-      .setDescription(`**${member.user.tag}** has been kicked.\n> Reason: ${reason}`)
-      .setFooter({ text: `By ${message.author.tag}` });
+    if (!member.kickable)
+      return interaction.reply({ content: "I can't kick this user.", ephemeral: true });
 
-    message.channel.send({ embeds: [embed] });
+    try {
+      await member.kick(reason);
+      await interaction.reply({
+        content: `👢 **${user.tag}** has been kicked.\nReason: ${reason}`,
+      });
+    } catch (err) {
+      console.error(err);
+      await interaction.reply({ content: "Couldn't kick this user.", ephemeral: true });
+    }
   },
 };

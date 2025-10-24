@@ -1,43 +1,43 @@
-import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
-import fs from "fs";
-import path from "path";
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const fs = require("fs");
+const path = require("path");
 
-const FILE = path.resolve("data", "warns.json");
-if (!fs.existsSync(path.dirname(FILE))) fs.mkdirSync(path.dirname(FILE), { recursive: true });
-if (!fs.existsSync(FILE)) fs.writeFileSync(FILE, JSON.stringify({}), "utf8");
+const warnPath = path.join(__dirname, "../../data/warnings.json");
 
-function load() { return JSON.parse(fs.readFileSync(FILE, "utf8") || "{}"); }
-function save(d) { fs.writeFileSync(FILE, JSON.stringify(d, null, 2)); }
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("delwarn")
+    .setDescription("Delete a specific warning from a user.")
+    .addUserOption((option) =>
+      option.setName("user").setDescription("User to remove warning from").setRequired(true)
+    )
+    .addIntegerOption((option) =>
+      option.setName("number").setDescription("Warning number to delete").setRequired(true)
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+    .setDMPermission(false),
 
-export default {
-  name: "delwarn",
-  description: "Delete a specific warning for a user",
-  async execute(message, args) {
-    if (!message.member.permissions.has(PermissionFlagsBits.KickMembers))
-      return message.reply("❌ You don't have permission to delete warns.");
+  async execute(interaction) {
+    const user = interaction.options.getUser("user");
+    const number = interaction.options.getInteger("number");
 
-    const target = message.mentions.members.first();
-    const idx = parseInt(args[1], 10) - 1;
-    if (!target) return message.reply("⚠️ Mention a user.");
-    if (isNaN(idx)) return message.reply("⚠️ Provide the warn number to delete (e.g. +delwarn @user 2).");
+    if (!fs.existsSync(warnPath))
+      return interaction.reply({ content: "No warnings file found.", ephemeral: true });
 
-    const db = load();
-    const guildData = db[message.guild.id] || {};
-    const userWarns = guildData[target.id] || [];
+    const data = JSON.parse(fs.readFileSync(warnPath, "utf8"));
+    const userWarnings = data[interaction.guild.id]?.[user.id];
 
-    if (!userWarns[idx]) return message.reply("❌ That warning number does not exist.");
+    if (!userWarnings || number < 1 || number > userWarnings.length)
+      return interaction.reply({
+        content: "⚠️ Invalid warning number.",
+        ephemeral: true,
+      });
 
-    const removed = userWarns.splice(idx, 1);
-    guildData[target.id] = userWarns;
-    db[message.guild.id] = guildData;
-    save(db);
+    userWarnings.splice(number - 1, 1);
+    fs.writeFileSync(warnPath, JSON.stringify(data, null, 2));
 
-    const embed = new EmbedBuilder()
-      .setColor("#3498db")
-      .setTitle("🗑️ Warning Removed")
-      .setDescription(`Removed warning **${removed[0].reason || "No reason"}** from **${target.user.tag}**`)
-      .setFooter({ text: `By ${message.author.tag}` });
-
-    return message.channel.send({ embeds: [embed] });
+    await interaction.reply({
+      content: `🗑️ Deleted warning #${number} for **${user.tag}**.`,
+    });
   },
 };

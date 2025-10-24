@@ -1,20 +1,26 @@
-import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
-export default {
-  name: "lock",
-  description: "Lock a channel 🔒",
-  async execute(message) {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
-      return message.reply("❌ You don't have permission to lock channels.");
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("lock")
+    .setDescription("Lock the current channel for everyone.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
+    .setDMPermission(false),
 
-    await message.channel.permissionOverwrites.edit(message.guild.id, { SendMessages: false });
+  async execute(interaction) {
+    const channel = interaction.channel;
 
-    const embed = new EmbedBuilder()
-      .setColor("#ff0000")
-      .setTitle("🔒 Channel Locked")
-      .setDescription(`Channel **${message.channel.name}** has been locked.`)
-      .setFooter({ text: `Action by ${message.author.tag}` });
+    try {
+      await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+        SendMessages: false,
+      });
 
-    message.channel.send({ embeds: [embed] });
+      await interaction.reply({
+        content: `🔒 Channel **${channel.name}** has been locked.`,
+      });
+    } catch (err) {
+      console.error(err);
+      await interaction.reply({ content: "Failed to lock this channel.", ephemeral: true });
+    }
   },
 };

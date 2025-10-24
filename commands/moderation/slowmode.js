@@ -1,22 +1,39 @@
-import { PermissionFlagsBits } from "discord.js";
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
-export default {
-  name: "slowmode",
-  description: "Set slowmode for the current channel (seconds)",
-  async execute(message, args) {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
-      return message.reply("❌ You don't have permission to set slowmode.");
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("slowmode")
+    .setDescription("Set the channel slowmode duration.")
+    .addIntegerOption((option) =>
+      option
+        .setName("seconds")
+        .setDescription("Slowmode duration in seconds (0 to disable)")
+        .setRequired(true)
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
+    .setDMPermission(false),
 
-    const seconds = parseInt(args[0]);
-    if (isNaN(seconds) || seconds < 0 || seconds > 21600)
-      return message.reply("⚠️ Provide a valid number of seconds (0 - 21600).");
+  async execute(interaction) {
+    const seconds = interaction.options.getInteger("seconds");
+    const channel = interaction.channel;
+
+    if (seconds < 0 || seconds > 21600)
+      return interaction.reply({
+        content: "❌ Slowmode must be between 0 and 21600 seconds (6h max).",
+        ephemeral: true,
+      });
 
     try {
-      await message.channel.setRateLimitPerUser(seconds);
-      return message.reply(`✅ Slowmode set to **${seconds}s**.`);
+      await channel.setRateLimitPerUser(seconds);
+      await interaction.reply({
+        content:
+          seconds === 0
+            ? "⏩ Slowmode disabled for this channel."
+            : `🐢 Slowmode set to **${seconds}s** for this channel.`,
+      });
     } catch (err) {
       console.error(err);
-      return message.reply("❌ Failed to set slowmode.");
+      await interaction.reply({ content: "Failed to set slowmode.", ephemeral: true });
     }
   },
 };

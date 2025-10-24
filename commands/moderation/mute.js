@@ -1,46 +1,51 @@
-import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
-import ms from "ms";
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
-export default {
-  name: "mute",
-  description: "Mute (timeout) a user ⛔",
-  async execute(message, args) {
-    // Check for permission
-    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
-      return message.reply("❌ You don’t have permission to timeout members.");
-    }
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("mute")
+    .setDescription("Timeout (mute) a user for a specific duration.")
+    .addUserOption((option) =>
+      option.setName("target").setDescription("Select a user to mute").setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("duration")
+        .setDescription("Mute duration (e.g. 10m, 1h, 1d)")
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option.setName("reason").setDescription("Reason for the mute")
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+    .setDMPermission(false),
 
-    const member = message.mentions.members.first();
-    if (!member) return message.reply("⚠️ Mention a user to mute.");
+  async execute(interaction) {
+    const user = interaction.options.getUser("target");
+    const duration = interaction.options.getString("duration");
+    const reason = interaction.options.getString("reason") || "No reason provided.";
 
-    const timeArg = args[1] || "10m";
-    const duration = ms(timeArg);
-    if (!duration || duration < 10000) {
-      return message.reply("⏰ Invalid time format (min 10s). Example: `+mute @user 10m reason`");
-    }
+    const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+    if (!member)
+      return interaction.reply({ content: "User not found.", ephemeral: true });
 
-    const reason = args.slice(2).join(" ") || "No reason provided";
+    const timeMap = { m: 60000, h: 3600000, d: 86400000 };
+    const match = duration.match(/^(\d+)([mhd])$/);
+    if (!match)
+      return interaction.reply({
+        content: "❌ Invalid duration format. Use m, h, or d (e.g. 10m, 1h, 1d).",
+        ephemeral: true,
+      });
+
+    const time = parseInt(match[1]) * timeMap[match[2]];
 
     try {
-      // Prevent muting admins or self
-      if (member.id === message.author.id) return message.reply("😅 You can’t mute yourself!");
-      if (member.roles.highest.position >= message.member.roles.highest.position)
-        return message.reply("🚫 You can’t mute someone with an equal or higher role.");
-
-      // Apply timeout
-      await member.timeout(duration, reason);
-
-      const embed = new EmbedBuilder()
-        .setColor("#3498db")
-        .setTitle("🔇 User Muted")
-        .setDescription(`**${member.user.tag}** has been muted for **${timeArg}**\n> 📝 Reason: ${reason}`)
-        .setFooter({ text: `Action by ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
-        .setTimestamp();
-
-      await message.channel.send({ embeds: [embed] });
-    } catch (error) {
-      console.error(error);
-      message.reply("⚠️ Failed to mute the user. Make sure I have the **Moderate Members** permission.");
+      await member.timeout(time, reason);
+      await interaction.reply({
+        content: `🔇 **${user.tag}** has been muted for **${duration}**.\nReason: ${reason}`,
+      });
+    } catch (err) {
+      console.error(err);
+      await interaction.reply({ content: "Couldn't mute this user.", ephemeral: true });
     }
   },
 };
