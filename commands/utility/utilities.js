@@ -3,8 +3,8 @@ const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fet
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("utility")
-    .setDescription("General utility tools.")
+    .setName("utilities")
+    .setDescription("General utilities tools.")
     .addSubcommand(sub =>
       sub
         .setName("define")

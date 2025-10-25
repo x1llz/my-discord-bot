@@ -1,48 +1,33 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const https = require("https");
+const { SlashCommandBuilder } = require("discord.js");
+const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("gif")
-    .setDescription("Send a random GIF based on your keyword 🎞️")
-    .addStringOption((opt) =>
+    .setDescription("Send a random GIF based on a keyword")
+    .addStringOption(opt =>
       opt
-        .setName("search")
-        .setDescription("What type of gif do you want? (ex: monkey, cat, anime, love...)")
+        .setName("query")
+        .setDescription("Keyword to search (e.g. cat, dance, anime)")
         .setRequired(true)
-    ),
+    )
+    .setDMPermission(true),
 
   async execute(interaction) {
-    const query = interaction.options.getString("search");
-    const url = `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=LIVDSRZULELA&limit=10`;
-
-    https
-      .get(url, (res) => {
-        let data = "";
-        res.on("data", (chunk) => (data += chunk));
-        res.on("end", () => {
-          try {
-            const json = JSON.parse(data);
-            if (!json.results || json.results.length === 0)
-              return interaction.reply({ content: "❌ No GIFs found.", ephemeral: true });
-
-            const random = json.results[Math.floor(Math.random() * json.results.length)];
-            const gifUrl = random.media_formats.gif.url;
-
-            const embed = new EmbedBuilder()
-              .setColor("Aqua")
-              .setTitle(`🎞️ Random "${query}" GIF`)
-              .setImage(gifUrl)
-              .setFooter({ text: `Requested by ${interaction.user.username}` });
-
-            interaction.reply({ embeds: [embed] });
-          } catch {
-            interaction.reply({ content: "⚠️ Error loading GIF.", ephemeral: true });
-          }
-        });
-      })
-      .on("error", () => {
-        interaction.reply({ content: "⚠️ GIF request failed.", ephemeral: true });
-      });
+    await interaction.deferReply();
+    const query = interaction.options.getString("query");
+    const key = process.env.TENOR_KEY;
+    try {
+      const res = await fetch(
+        `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=${key}&limit=25`
+      );
+      const data = await res.json();
+      if (!data.results || data.results.length === 0)
+        return await interaction.editReply("No GIFs found for that keyword.");
+      const gif = data.results[Math.floor(Math.random() * data.results.length)];
+      await interaction.editReply(gif.media_formats.gif.url);
+    } catch {
+      await interaction.editReply("Error while loading the GIF.");
+    }
   },
 };
