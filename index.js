@@ -1,5 +1,14 @@
 require("dotenv").config();
-const { Client, GatewayIntentBits, Collection, REST, Routes, ActivityType } = require("discord.js");
+const { 
+  Client, 
+  GatewayIntentBits, 
+  Collection, 
+  REST, 
+  Routes, 
+  ActivityType, 
+  AutoModerationRuleTriggerType, 
+  AutoModerationActionType 
+} = require("discord.js");
 const fs = require("fs");
 const express = require("express");
 
@@ -49,9 +58,30 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 })();
 
 // ===== BOT READY =====
-client.once("ready", () => {
+client.once("ready", async () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
   client.user.setActivity("/help  .gg/hellz", { type: ActivityType.Playing });
+
+  // ===== AUTOMOD SETUP =====
+  const guild = client.guilds.cache.get("1424695601727017141"); // ← remplace ici par ton ID de serveur
+  try {
+    if (!guild) return console.log("⚠️ Serveur introuvable pour AutoMod.");
+    const existingRules = await guild.autoModerationRules.fetch();
+    if (existingRules.some(r => r.name === "Hellz AutoMod Test")) {
+      console.log("⚙️ AutoMod déjà configuré.");
+    } else {
+      await guild.autoModerationRules.create({
+        name: "Hellz AutoMod Test",
+        eventType: 1,
+        triggerType: AutoModerationRuleTriggerType.Keyword,
+        triggerMetadata: { keywordFilter: ["interdit", "badword", "nsfw"] },
+        actions: [{ type: AutoModerationActionType.BlockMessage }],
+      });
+      console.log("✅ AutoMod actif sur le serveur.");
+    }
+  } catch (err) {
+    console.error("❌ Erreur AutoMod :", err);
+  }
 });
 
 // ===== INTERACTION HANDLER =====
