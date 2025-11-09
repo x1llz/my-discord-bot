@@ -1,26 +1,30 @@
-const { SlashCommandBuilder } = require("discord.js");
-const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+
+const gifs = [
+  "https://media.tenor.com/SMAF2J2vBqMAAAAC/anime-pat.gif",
+  "https://media.tenor.com/NTE0O7Hz9J4AAAAC/anime-headpat.gif",
+  "https://media.tenor.com/UXplv5B-Fk4AAAAC/pat-anime.gif",
+  "https://media.tenor.com/EhFjPwF6_sYAAAAC/anime-pat.gif",
+  "https://media.tenor.com/Lp-WmD0GzFMAAAAC/pat-anime.gif",
+];
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("pat")
-    .setDescription("Send a cute pat GIF to someone")
+    .setDescription("Pat someone gently")
     .addUserOption(opt =>
-      opt.setName("user").setDescription("The person you want to pat").setRequired(true)
-    )
-    .setDMPermission(true),
+      opt.setName("user").setDescription("Person to pat").setRequired(true)
+    ),
 
   async execute(interaction) {
-    await interaction.deferReply();
-    const user = interaction.options.getUser("user");
-    const key = process.env.TENOR_KEY;
-    try {
-      const res = await fetch(`https://tenor.googleapis.com/v2/search?q=anime+pat&key=${key}&limit=25`);
-      const data = await res.json();
-      const gif = data.results[Math.floor(Math.random() * data.results.length)];
-      await interaction.editReply(`${interaction.user} pats ${user} 🐾\n${gif.media_formats.gif.url}`);
-    } catch {
-      await interaction.editReply("Error loading GIF.");
-    }
+    const target = interaction.options.getUser("user");
+    const gif = gifs[Math.floor(Math.random() * gifs.length)];
+
+    const embed = new EmbedBuilder()
+      .setColor("#FFD580")
+      .setDescription(`🐾 **${interaction.user.username}** patted **${target.username}**!`)
+      .setImage(gif);
+
+    await interaction.reply({ embeds: [embed] });
   },
 };

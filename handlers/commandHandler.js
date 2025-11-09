@@ -1,53 +1,51 @@
-
 const fs = require("fs");
 const path = require("path");
 const { REST, Routes, Collection } = require("discord.js");
 
-async function loadCommands(client) {
-  client.commands = new Collection();
+module.exports = async (client) => {
   const commands = [];
-  const base = path.join(__dirname, "../commands");
+  client.commands = new Collection();
 
-  if (!fs.existsSync(base)) return console.error("❌ No commands directory found.");
+  const basePath = path.join(__dirname, "../commands");
+  if (!fs.existsSync(basePath)) {
+    console.error("❌ Commands folder not found.");
+    return;
+  }
 
-  const folders = fs.readdirSync(base);
+  const folders = fs.readdirSync(basePath);
   for (const folder of folders) {
-    const folderPath = path.join(base, folder);
+    const folderPath = path.join(basePath, folder);
     if (!fs.statSync(folderPath).isDirectory()) continue;
 
     const files = fs.readdirSync(folderPath).filter(f => f.endsWith(".js"));
     for (const file of files) {
-      const cmdPath = path.join(folderPath, file);
-      const command = require(cmdPath);
-      if (!command?.data || !command?.execute) {
-        console.warn(`⚠️ Skipped ${folder}/${file} (missing data or execute).`);
-        continue;
-      }
-      client.commands.set(command.data.name, command);
+      const filePath = path.join(folderPath, file);
       try {
+        const command = require(filePath);
+        if (!command?.data?.name || !command?.execute) {
+          console.warn(`⚠️ Skipped ${folder}/${file} (invalid structure).`);
+          continue;
+        }
+
+        client.commands.set(command.data.name, command);
         commands.push(command.data.toJSON());
-      } catch {
-        console.warn(`⚠️ Skipped ${folder}/${file} (invalid SlashCommandBuilder).`);
+      } catch (err) {
+        console.error(`❌ Failed to load ${folder}/${file}:`, err);
       }
     }
   }
 
-  // Register GLOBAL commands
+  // === Global Registration ===
   const token = process.env.TOKEN;
   const clientId = process.env.CLIENT_ID;
-  if (!token || !clientId) {
-    console.error("❌ Missing TOKEN or CLIENT_ID in environment. Cannot register slash commands.");
-    return;
-  }
+  if (!token || !clientId) return console.error("❌ Missing TOKEN or CLIENT_ID in .env");
 
   const rest = new REST({ version: "10" }).setToken(token);
   try {
-    console.log(`🌐 Registering ${commands.length} global slash commands...`);
+    console.log(`🌍 Registering ${commands.length} global commands...`);
     await rest.put(Routes.applicationCommands(clientId), { body: commands });
-    console.log("✅ Global slash commands registered.");
+    console.log(`✅ ${commands.length} global commands active.`);
   } catch (err) {
-    console.error("❌ Failed to register global commands:", err?.rawError || err);
+    console.error("❌ Error registering slash commands:", err);
   }
-}
-
-module.exports = { loadCommands };
+};

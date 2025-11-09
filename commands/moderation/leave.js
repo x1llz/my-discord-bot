@@ -1,43 +1,26 @@
+// commands/owner/leave.js
 const { SlashCommandBuilder } = require("discord.js");
-
-const ownerId = "1187100546683899995";
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("leave")
-    .setDescription("Force the bot to leave a specific server (bot owner only).")
-    .addStringOption((option) =>
-      option.setName("serverid").setDescription("Server ID to leave").setRequired(true)
-    )
-    .setDMPermission(false),
+    .setDescription("Force the bot to leave a server (owner only)")
+    .addStringOption(opt =>
+      opt.setName("server_id").setDescription("Server ID to leave").setRequired(true)
+    ),
 
   async execute(interaction) {
+    const ownerId = "1187100546683899995";
     if (interaction.user.id !== ownerId)
-      return interaction.reply({
-        content: "❌ Only the bot owner can use this command.",
-        ephemeral: true,
-      });
+      return interaction.reply({ content: "❌ You are not authorized to use this command.", ephemeral: true });
 
-    const serverId = interaction.options.getString("serverid");
+    const serverId = interaction.options.getString("server_id");
     const guild = interaction.client.guilds.cache.get(serverId);
 
     if (!guild)
-      return interaction.reply({
-        content: "⚠️ The bot is not in that server.",
-        ephemeral: true,
-      });
+      return interaction.reply({ content: "❌ I’m not in that server or invalid ID.", ephemeral: true });
 
-    try {
-      await guild.leave();
-      await interaction.reply({
-        content: `🚪 Successfully left **${guild.name}** (${serverId}).`,
-      });
-    } catch (err) {
-      console.error(err);
-      await interaction.reply({
-        content: "❌ Failed to leave the server.",
-        ephemeral: true,
-      });
-    }
+    await guild.leave();
+    await interaction.reply({ content: `✅ Successfully left **${guild.name}** (${guild.id}).`, ephemeral: false });
   },
 };

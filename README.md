@@ -1,32 +1,61 @@
-# 🌊 Hellz V3 — Discord Bot
+🌊 Hellz — Discord Bot
 
-Hellz is a modern, fully slash-based Discord bot built with **discord.js v14**.  
-Focused on moderation, fun, and utility — inspired by bots like Dyno and Dank Memer.
+Hellz is a modern, slash-based Discord bot built with discord.js v14.
+Focused on moderation, security, and fun, designed with the signature blue vibe aesthetic.
 
 ---
 
 ## ⚙️ Features
 
 ### 🛠️ Moderation
-- `/ban`, `/unban`, `/mute`, `/unmute`, `/kick`
-- `/warn` (add, list, logs)
-- `/lock`, `/unlock`, `/purge`, `/slowmode`
-- `/role` (give, all, list, autorole)
-- `/logs`, `/modlogs`
+- `/ban, /unban, /kick, /mute, /unmute, /purge, /slowmode, /lock, /unlock
 
-### 💬 Social
-- `/social hug`, `/social kiss`, `/social slap`, `/social pat`
-- `/social marry`, `/social adopt`, `/social divorce`, `/social disown`, `/social tree`
+/warn, /warnings, /delwarn (warn system)
 
-### 🎮 Games
-- `/games meme`, `/games rps`, `/games 8ball`, `/games coinflip`
-- `/games roast`, `/games rate`, `/games lovecalc`
-- `/games dadjoke`, `/games rizz`, `/games spacefact`, `/games animalfact`
+/role add, /role all
+
+/admin, /adminremove (bot-level admin control)
+
+/leave (bot leaves a server)
+
+/ranks, /mods (view staff and bot admins)
+
+/logs, /modlogs (server moderation logging)
+
+/vanity set (auto-role and custom message when users add a vanity tag in their status)
+
+/antinuke (automatic protection against nukes & raids, auto-ban on suspicious activity)`
+
+### 🎉 Fun
+- `/gif (random GIF by keyword)
+
+/kiss, /hug, /pat, /slap, /bang (anime actions)
+
+/roast (30+ random savage roasts)
+
+/rizz (30+ smooth or goofy rizz lines)
+
+/dadjoke (25+ dad jokes)`
+
+### 🔒 Security
+- `Anti-Nuke: detects rapid destructive actions (channel/role creation, bans, etc.)
+
+Automatically bans offenders after 3+ detected actions within 10 seconds.
+
+Blacklist System: /blacklist, /unblacklist, /isblacklisted
+
+Owner & Admin Security: only bot owner (1187100546683899995) can add or remove global admins.`
 
 ### 🧠 Utility
-- `/utility define`, `/utility poll`, `/utility remind`
-- `/status` (ping, uptime, website)
-- `/info` (server, bot)
+- `/banner (view a user’s profile banner)
+
+/roleinfo (check info about a role)
+
+/say (make the bot send a message, mentions supported)
+
+/help (links to support & Hellz Market)
+
+/commands (list available commands by category)`
 
 ---
 
@@ -59,10 +88,11 @@ npm run start
 **Bot:** Hellz V3  
 **Developers:** x1llz 
 **Discord:** [discord.gg/hellz](https://discord.gg/hellz)  
+**Website:** [Hellz Market](hellz-market.mysellauth.com)
 **Framework:** discord.js v14  
 **Language:** Node.js 22.10.0  
 
-> Hellz V3 is maintained by x1llz.
+> Hellz is maintained by x1llz.
 > Built for community management, moderation, and entertainment.
 
 ---

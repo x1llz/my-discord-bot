@@ -1,16 +1,17 @@
 require("dotenv").config();
-const { 
-  Client, 
-  GatewayIntentBits, 
-  Collection, 
-  REST, 
-  Routes, 
-  ActivityType, 
-  AutoModerationRuleTriggerType, 
-  AutoModerationActionType 
+const {
+  Client,
+  GatewayIntentBits,
+  Collection,
+  ActivityType,
+  AutoModerationRuleTriggerType,
+  AutoModerationActionType,
 } = require("discord.js");
-const fs = require("fs");
 const express = require("express");
+const fs = require("fs");
+const { loadCommands } = require("./handlers/commandHandler");
+const { loadEvents } = require("./handlers/eventHandler");
+const logger = require("./logger");
 
 // ===== CLIENT CONFIG =====
 const client = new Client({
@@ -24,88 +25,70 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-const commands = [];
+client.cooldowns = new Map();
 
-// ===== COMMAND LOADER =====
-const loadCommands = (dir = "./commands") => {
-  const files = fs.readdirSync(dir);
-  for (const file of files) {
-    const path = `${dir}/${file}`;
-    if (fs.statSync(path).isDirectory()) loadCommands(path);
-    else if (file.endsWith(".js")) {
-      const command = require(path);
-      if (!command.data || !command.data.name) continue;
-      client.commands.set(command.data.name, command);
-      commands.push(command.data.toJSON());
-    }
-  }
-};
-loadCommands();
-console.log(`✅ Loaded ${commands.length} commands.`);
-
-// ===== GLOBAL COMMAND REGISTRATION =====
-const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+// ===== LOAD HANDLERS =====
 (async () => {
   try {
-    console.log("🌍 Registering global slash commands...");
-    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
-    console.log("✅ Global slash commands registered.");
-  } catch (error) {
-    console.error("❌ Error registering commands:");
-    if (error.rawError?.errors) console.log(JSON.stringify(error.rawError.errors, null, 2));
-    else console.error(error);
+    await loadCommands(client);
+    await loadEvents(client);
+    logger.info("✅ All commands and events loaded.");
+  } catch (err) {
+    logger.error(`Handler error: ${err.stack}`);
   }
 })();
 
-// ===== BOT READY =====
+// ===== READY EVENT (basic presence + AutoMod) =====
 client.once("ready", async () => {
-  console.log(`🤖 Logged in as ${client.user.tag}`);
-  client.user.setActivity("/help  .gg/hellz", { type: ActivityType.Playing });
+  logger.info(`🤖 Logged in as ${client.user.tag}`);
+  client.user.setActivity("/help | .gg/hellz", { type: ActivityType.Playing });
 
-  // ===== AUTOMOD SETUP =====
-  const guild = client.guilds.cache.get("1424695601727017141"); // ← remplace ici par ton ID de serveur
+  const guild = client.guilds.cache.get(process.env.GUILD_ID);
+  if (!guild) return logger.warn("Guild ID not set or bot not in that guild.");
+
   try {
-    if (!guild) return console.log("⚠️ Serveur introuvable pour AutoMod.");
     const existingRules = await guild.autoModerationRules.fetch();
-    if (existingRules.some(r => r.name === "Hellz AutoMod Test")) {
-      console.log("⚙️ AutoMod déjà configuré.");
-    } else {
+    if (!existingRules.some(r => r.name === "Hellz AutoMod")) {
       await guild.autoModerationRules.create({
-        name: "Hellz AutoMod Test",
+        name: "Hellz AutoMod",
         eventType: 1,
         triggerType: AutoModerationRuleTriggerType.Keyword,
-        triggerMetadata: { keywordFilter: ["interdit", "badword", "nsfw"] },
+        triggerMetadata: { keywordFilter: ["badword", "nsfw", "interdit"] },
         actions: [{ type: AutoModerationActionType.BlockMessage }],
       });
-      console.log("✅ AutoMod actif sur le serveur.");
+      logger.info("✅ AutoMod initialized.");
+    } else {
+      logger.info("⚙️ AutoMod already active.");
     }
   } catch (err) {
-    console.error("❌ Erreur AutoMod :", err);
+    logger.error(`AutoMod setup failed: ${err.message}`);
   }
 });
 
 // ===== INTERACTION HANDLER =====
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
-  const cmd = client.commands.get(interaction.commandName);
-  if (!cmd) return;
+
+  const command = client.commands.get(interaction.commandName);
+  if (!command) return;
 
   try {
-    await cmd.execute(interaction);
+    await command.execute(interaction, client);
+    logger.command(`${interaction.user.tag} used /${interaction.commandName}`);
   } catch (err) {
-    console.error(err);
-    const reply = { content: "⚠️ Something went wrong executing this command.", ephemeral: true };
+    logger.error(`Command error [/${interaction.commandName}]: ${err.stack}`);
+    const reply = { content: "⚠️ Something went wrong.", ephemeral: true };
     if (interaction.replied || interaction.deferred) await interaction.followUp(reply);
     else await interaction.reply(reply);
   }
 });
 
-// ===== KEEP ALIVE =====
+// ===== EXPRESS KEEP-ALIVE =====
 const app = express();
-app.get("/", (_, res) => res.send("Bot is running."));
-app.listen(process.env.PORT || 3001, () =>
-  console.log(`🌐 Express server running on port ${process.env.PORT || 3001}`)
-);
+app.get("/", (_, res) => res.send("✅ Hellz Bot is alive and running smoothly."));
+app.listen(process.env.PORT || 3001, () => {
+  logger.info(`🌐 Express server online — Port ${process.env.PORT || 3001}`);
+});
 
 // ===== LOGIN =====
 client.login(process.env.TOKEN);

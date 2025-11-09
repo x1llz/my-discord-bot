@@ -1,12 +1,12 @@
 const express = require("express");
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
-app.get("/", (req, res) => {
-  res.send("✅ Hellz Bot is running!");
+app.get("/", (_, res) => {
+  res.send("✅ Hellz Bot is alive and running smoothly.");
 });
 
 app.listen(PORT, () => {
-  console.log(`🌐 Web server actif sur le port ${PORT}`);
+  console.log(`🌐 Express web server online — Port ${PORT}`);
 });

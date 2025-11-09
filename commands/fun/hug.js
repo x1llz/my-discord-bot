@@ -1,26 +1,30 @@
-const { SlashCommandBuilder } = require("discord.js");
-const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+
+const gifs = [
+  "https://media.tenor.com/aX0UItqPsaUAAAAC/hug-anime.gif",
+  "https://media.tenor.com/VaF3KxJ7KH4AAAAC/anime-hug.gif",
+  "https://media.tenor.com/QZC9EYP5Wk8AAAAC/hug-anime.gif",
+  "https://media.tenor.com/VZtGIpd4p6kAAAAC/anime-hug-cute.gif",
+  "https://media.tenor.com/E2dI7sYqQZMAAAAC/hug-anime-love.gif",
+];
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("hug")
-    .setDescription("Send a wholesome hug GIF to someone")
+    .setDescription("Hug someone warmly")
     .addUserOption(opt =>
-      opt.setName("user").setDescription("The person you want to hug").setRequired(true)
-    )
-    .setDMPermission(true),
+      opt.setName("user").setDescription("Person to hug").setRequired(true)
+    ),
 
   async execute(interaction) {
-    await interaction.deferReply();
-    const user = interaction.options.getUser("user");
-    const key = process.env.TENOR_KEY;
-    try {
-      const res = await fetch(`https://tenor.googleapis.com/v2/search?q=anime+hug&key=${key}&limit=25`);
-      const data = await res.json();
-      const gif = data.results[Math.floor(Math.random() * data.results.length)];
-      await interaction.editReply(`${interaction.user} hugs ${user} 🤗\n${gif.media_formats.gif.url}`);
-    } catch {
-      await interaction.editReply("Error loading GIF.");
-    }
+    const target = interaction.options.getUser("user");
+    const gif = gifs[Math.floor(Math.random() * gifs.length)];
+
+    const embed = new EmbedBuilder()
+      .setColor("#00BFFF")
+      .setDescription(`🤗 **${interaction.user.username}** hugged **${target.username}**!`)
+      .setImage(gif);
+
+    await interaction.reply({ embeds: [embed] });
   },
 };

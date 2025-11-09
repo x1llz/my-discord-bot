@@ -1,26 +1,30 @@
-const { SlashCommandBuilder } = require("discord.js");
-const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+
+const gifs = [
+  "https://media.tenor.com/vBv0cA6QsoAAAAAC/anime-slap.gif",
+  "https://media.tenor.com/Ws6Dm1ZW_vMAAAAC/girl-slap-anime.gif",
+  "https://media.tenor.com/5RzL0lA6pGIAAAAC/slap-anime.gif",
+  "https://media.tenor.com/Baa_P9zGZk8AAAAC/slap.gif",
+  "https://media.tenor.com/V5JvOyzZqWAAAAAC/anime-slap.gif",
+];
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("slap")
-    .setDescription("Send a funny anime slap GIF to someone")
+    .setDescription("Slap someone brutally 😈")
     .addUserOption(opt =>
-      opt.setName("user").setDescription("The person you want to slap").setRequired(true)
-    )
-    .setDMPermission(true),
+      opt.setName("user").setDescription("Person to slap").setRequired(true)
+    ),
 
   async execute(interaction) {
-    await interaction.deferReply();
-    const user = interaction.options.getUser("user");
-    const key = process.env.TENOR_KEY;
-    try {
-      const res = await fetch(`https://tenor.googleapis.com/v2/search?q=anime+slap&key=${key}&limit=25`);
-      const data = await res.json();
-      const gif = data.results[Math.floor(Math.random() * data.results.length)];
-      await interaction.editReply(`${interaction.user} slaps ${user} 😵\n${gif.media_formats.gif.url}`);
-    } catch {
-      await interaction.editReply("Error loading GIF.");
-    }
+    const target = interaction.options.getUser("user");
+    const gif = gifs[Math.floor(Math.random() * gifs.length)];
+
+    const embed = new EmbedBuilder()
+      .setColor("#FF6961")
+      .setDescription(`👋 **${interaction.user.username}** slapped **${target.username}**!`)
+      .setImage(gif);
+
+    await interaction.reply({ embeds: [embed] });
   },
 };

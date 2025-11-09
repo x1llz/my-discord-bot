@@ -1,19 +1,32 @@
 {
-  "name": "hellz-v3",
-  "version": "3.0.0",
-  "description": "Hellz Discord Bot V3",
+  "name": "hellz-bot",
+  "version": "4.0.0",
+  "description": "Hellz | Smart Moderation | The Blue Vibe.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "deploy": "npm install && npm run start"
   },
   "dependencies": {
+    "chalk": "^5.6.2",
     "discord.js": "^14.16.1",
     "dotenv": "^16.3.1",
-    "express": "^4.19.2",
+    "express": "^4.19.2"
+  },
+  "optionalDependencies": {
     "node-fetch": "^3.3.2"
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "moderation",
+    "hellz",
+    "discord.js"
+  ],
+  "author": "x1llz",
+  "license": "MIT"
 }

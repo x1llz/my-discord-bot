@@ -1,51 +1,34 @@
+// commands/moderation/modlogs.js
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
+const modlogsFile = path.join(__dirname, "../../data/modlogs.json");
 
-const modLogsPath = path.join(__dirname, "../../data/modlogs.json");
+if (!fs.existsSync(modlogsFile)) fs.writeFileSync(modlogsFile, JSON.stringify({}));
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("modlogs")
-    .setDescription("View moderation logs of a specific user.")
-    .addUserOption((option) =>
-      option.setName("user").setDescription("User to view logs").setRequired(true)
-    )
-    .setDMPermission(false),
+    .setDescription("Show moderation logs for a user")
+    .addUserOption(opt =>
+      opt.setName("user").setDescription("User to view logs for").setRequired(true)
+    ),
 
   async execute(interaction) {
     const user = interaction.options.getUser("user");
+    const logs = JSON.parse(fs.readFileSync(modlogsFile));
 
-    if (!fs.existsSync(modLogsPath))
-      return interaction.reply({
-        content: "⚠️ No moderation logs found yet.",
-        ephemeral: true,
-      });
+    const userLogs = logs[user.id] || [];
 
-    const data = JSON.parse(fs.readFileSync(modLogsPath, "utf8"));
-    const logs = data[interaction.guild.id]?.[user.id];
-
-    if (!logs || logs.length === 0)
-      return interaction.reply({
-        content: `${user.tag} has no moderation logs.`,
-        ephemeral: true,
-      });
+    if (userLogs.length === 0)
+      return interaction.reply({ content: "⚠️ No moderation logs for this user.", ephemeral: true });
 
     const embed = new EmbedBuilder()
-      .setColor("Red")
-      .setTitle(`🧾 Moderation Logs for ${user.tag}`)
-      .setDescription(
-        logs
-          .map(
-            (log, i) =>
-              `**#${i + 1}** — ${log.action}\n> Moderator: ${log.moderator}\n> Reason: ${log.reason}\n> Date: <t:${Math.floor(
-                new Date(log.date).getTime() / 1000
-              )}:R>`
-          )
-          .join("\n\n")
-      )
-      .setFooter({ text: "Hellz V3 Moderation System" });
+      .setColor("#00BFFF")
+      .setTitle(`🧾 Mod Logs for ${user.tag}`)
+      .setDescription(userLogs.map((l, i) => `**${i + 1}.** ${l.action} — ${l.reason}`).join("\n"))
+      .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], ephemeral: false });
   },
 };

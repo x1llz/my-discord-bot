@@ -1,47 +1,42 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+// commands/moderation/greroll.js
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("greroll")
-    .setDescription("Reroll a giveaway winner using the message ID.")
-    .addStringOption((opt) =>
-      opt.setName("messageid").setDescription("Giveaway message ID").setRequired(true)
+    .setDescription("Reroll a finished giveaway using its message ID")
+    .addStringOption(opt =>
+      opt.setName("message_id").setDescription("Message ID of the giveaway").setRequired(true)
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .setDMPermission(false),
+    .addIntegerOption(opt =>
+      opt.setName("winners").setDescription("Number of new winners").setRequired(true)
+    ),
 
   async execute(interaction) {
-    const messageId = interaction.options.getString("messageid");
+    const messageId = interaction.options.getString("message_id");
+    const winners = interaction.options.getInteger("winners");
+
     const channel = interaction.channel;
 
     try {
-      const message = await channel.messages.fetch(messageId);
-      const reaction = message.reactions.cache.get("🎉");
+      const msg = await channel.messages.fetch(messageId);
+      const reaction = msg.reactions.cache.get("🎉");
       if (!reaction)
-        return interaction.reply({
-          content: "⚠️ No 🎉 reaction found on that message.",
-          ephemeral: true,
-        });
+        return interaction.reply({ content: "❌ No 🎉 reaction found on that message.", ephemeral: true });
 
       const users = await reaction.users.fetch();
-      const entries = users.filter((u) => !u.bot).map((u) => u.id);
+      const participants = users.filter(u => !u.bot);
+      if (participants.size === 0)
+        return interaction.reply({ content: "❌ No participants found.", ephemeral: true });
 
-      if (entries.length === 0)
-        return interaction.reply({
-          content: "❌ No participants found for this giveaway.",
-          ephemeral: true,
-        });
+      const winnersList = participants.random(winners);
+      const winnersText = winnersList.map(u => `${u}`).join(", ");
 
-      const winner = entries[Math.floor(Math.random() * entries.length)];
-      await interaction.reply({
-        content: `🎉 New winner: <@${winner}>! Congratulations!`,
-      });
+      await channel.send(`🎊 Reroll winners: ${winnersText}`);
+      await interaction.reply({ content: "✅ Giveaway rerolled successfully.", ephemeral: true });
     } catch (err) {
       console.error(err);
-      await interaction.reply({
-        content: "❌ Couldn't find that giveaway or reroll it.",
-        ephemeral: true,
-      });
+      return interaction.reply({ content: "❌ Invalid message ID or message not found in this channel.", ephemeral: true });
     }
   },
 };

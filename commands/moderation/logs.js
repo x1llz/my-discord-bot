@@ -1,37 +1,42 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+// commands/moderation/logs.js
+const { SlashCommandBuilder } = require("discord.js");
+const fs = require("fs");
+const path = require("path");
+const logsFile = path.join(__dirname, "../../data/logs.json");
+
+if (!fs.existsSync(logsFile)) fs.writeFileSync(logsFile, JSON.stringify({}));
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("logs")
-    .setDescription("Show recent server logs (joins, leaves, bans, etc.)")
-    .setDMPermission(false),
+    .setDescription("Set or remove the log channel")
+    .addSubcommand(sub =>
+      sub
+        .setName("set")
+        .setDescription("Set the log channel")
+        .addChannelOption(opt =>
+          opt.setName("channel").setDescription("Log channel").setRequired(true)
+        )
+    )
+    .addSubcommand(sub =>
+      sub.setName("remove").setDescription("Remove the log channel")
+    ),
 
   async execute(interaction) {
-    const logs = interaction.guild.channels.cache.find(
-      (ch) => ch.name.includes("logs") && ch.isTextBased()
-    );
+    const guildId = interaction.guild.id;
+    let logs = JSON.parse(fs.readFileSync(logsFile));
 
-    if (!logs)
-      return interaction.reply({
-        content: "⚠️ No logs channel found. Create one named `logs`.",
-        ephemeral: true,
-      });
+    if (interaction.options.getSubcommand() === "set") {
+      const channel = interaction.options.getChannel("channel");
+      logs[guildId] = channel.id;
+      fs.writeFileSync(logsFile, JSON.stringify(logs, null, 2));
+      return interaction.reply({ content: `✅ Logs channel set to ${channel}.`, ephemeral: false });
+    }
 
-    const messages = await logs.messages.fetch({ limit: 10 }).catch(() => null);
-    if (!messages?.size)
-      return interaction.reply({ content: "No recent logs found.", ephemeral: true });
-
-    const logList = [...messages.values()]
-      .slice(0, 10)
-      .map((m) => `• ${m.author.tag}: ${m.content}`)
-      .join("\n");
-
-    const embed = new EmbedBuilder()
-      .setColor("Blue")
-      .setTitle("🗂️ Recent Server Logs")
-      .setDescription(logList || "No logs available.")
-      .setFooter({ text: "Hellz V3 System" });
-
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    if (interaction.options.getSubcommand() === "remove") {
+      delete logs[guildId];
+      fs.writeFileSync(logsFile, JSON.stringify(logs, null, 2));
+      return interaction.reply({ content: "🗑️ Log channel removed.", ephemeral: false });
+    }
   },
 };

@@ -1,28 +1,24 @@
+// commands/moderation/unmute.js
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("unmute")
-    .setDescription("Remove timeout (unmute) from a user.")
-    .addUserOption((option) =>
-      option.setName("target").setDescription("Select a user to unmute").setRequired(true)
+    .setDescription("Remove timeout from a user")
+    .addUserOption(opt =>
+      opt.setName("user").setDescription("User to unmute").setRequired(true)
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .setDMPermission(false),
+    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
   async execute(interaction) {
-    const user = interaction.options.getUser("target");
+    const user = interaction.options.getUser("user");
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
 
-    if (!member)
-      return interaction.reply({ content: "User not found.", ephemeral: true });
+    if (!member) return interaction.reply({ content: "❌ User not found.", ephemeral: true });
+    if (!member.isCommunicationDisabled())
+      return interaction.reply({ content: "⚠️ This user is not muted.", ephemeral: true });
 
-    try {
-      await member.timeout(null);
-      await interaction.reply({ content: `🔊 **${user.tag}** has been unmuted.` });
-    } catch (err) {
-      console.error(err);
-      await interaction.reply({ content: "Couldn't unmute this user.", ephemeral: true });
-    }
+    await member.timeout(null);
+    await interaction.reply({ content: `🔊 ${user.tag} has been unmuted.`, ephemeral: false });
   },
 };
