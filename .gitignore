@@ -8,13 +8,14 @@ node_modules/
 .env.development
 
 # === Logs ===
-hellz.log
+logs/
 *.log
 
-# === Data JSONs ===
-warnings.json
-autorole.json
-family.json
+# === Data files (local storage) ===
+data/warns.json
+data/blacklist.json
+data/antinuke.json
+data/owners.json
 
 # === Local config / system files ===
 .DS_Store
@@ -22,7 +23,7 @@ Thumbs.db
 .idea/
 .vscode/
 
-# === Build / temp files ===
+# === Build / temp ===
 dist/
 temp/
 .cache/
