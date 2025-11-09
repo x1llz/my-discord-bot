@@ -1,32 +1,39 @@
+const { SlashCommandBuilder } = require("discord.js");
+
 const roasts = [
-  "Bro, you’re so broke even your Wi-Fi is on layaway.",
-  "You look like you Google ‘how to be funny’ before every conversation.",
-  "Your mom should’ve named you ‘Buffering’ because you’re always slow.",
-  "You got a face that even radio stations would reject.",
-  "You look like you still type with one finger.",
-  "Your confidence is like your bank account — overdrawn.",
-  "You talk so much nonsense you should charge a subscription fee for it.",
-  "You look like the before picture in every ad.",
-  "Your personality was clearly built using expired software.",
-  "You're the reason group chats go silent.",
-  "You look like your parents met on Omegle.",
-  "Your sense of fashion died and never respawned.",
-  "You sound like a YouTube tutorial recorded with a potato.",
-  "You're proof evolution sometimes hits pause.",
-  "You're so slow that buffering wheels get impatient.",
-  "You’ve got that ‘Windows error’ kind of energy.",
-  "You look like you’d lose a staring contest with a mirror.",
-  "You post motivational quotes but can’t even motivate your charger to stay plugged in.",
-  "You look like a failed Roblox avatar.",
-  "If I had a dollar for every bad decision you’ve made, I’d own Tesla by now.",
-  "Your voice could make text-to-speech sound human.",
-  "You look like you eat cereal with water.",
-  "You act like Wi-Fi — weak and disappears when needed.",
-  "You’re the type of person to trip on wireless internet.",
-  "You look like you still use Internet Explorer as a personality trait.",
-  "You have the energy of a low battery warning.",
-  "You dress like your laundry machine quit on you.",
-  "You talk like a TikTok comment section — loud, wrong, and full of bad takes.",
-  "You look like you’d apologize to an NPC.",
+  "Nigga ur fat, this is why you ain’t got money.",
+  "Motherf***er your mom didn’t even give you a penny.",
+  "You look like the type of person to lose a fight with your own shadow.",
+  "Bro, your personality expired in 2019.",
+  "You’re proof that Wi-Fi signals don’t reach common sense.",
+  "Your brain called, it wants a refund.",
+  "You look like you smell like expired milk.",
   "You’re the human version of a lag spike.",
+  "You type like you just learned what a keyboard is.",
+  "Bro got humbled by the tutorial boss.",
+  "You're like a participation trophy with Wi-Fi.",
+  "Your parents muted you in real life.",
+  "You're built like a failed TikTok trend.",
+  "You got dropped as a baby and bounced twice.",
+  "You got rejected by an NPC.",
+  "You're the reason autocorrect gave up.",
+  "You're not dumb, you're just committed to being wrong.",
+  "Bro’s confidence is built on Minecraft dirt.",
+  "Your drip is powered by poverty.",
+  "You argue with bots and lose."
 ];
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("roast")
+    .setDescription("Roast someone brutally.")
+    .addUserOption(opt =>
+      opt.setName("target").setDescription("The user to roast").setRequired(true)
+    ),
+
+  async execute(interaction) {
+    const target = interaction.options.getUser("target");
+    const random = roasts[Math.floor(Math.random() * roasts.length)];
+    await interaction.reply(`🔥 <@${target.id}>, ${random}`);
+  },
+};
