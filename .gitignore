@@ -10,12 +10,18 @@ node_modules/
 # === Logs ===
 logs/
 *.log
+hellz.log
 
-# === Data files (local storage) ===
-data/warns.json
-data/blacklist.json
-data/antinuke.json
-data/owners.json
+# === Data JSONs (private bot data) ===
+data/*.json
+warnings.json
+warns.json
+owners.json
+blacklist.json
+antinuke.json
+autorole.json
+family.json
+vanity.json
 
 # === Local config / system files ===
 .DS_Store
@@ -23,7 +29,20 @@ Thumbs.db
 .idea/
 .vscode/
 
-# === Build / temp ===
+# === Build / temp files ===
 dist/
 temp/
 .cache/
+
+# === OS-specific files ===
+*.bak
+*.tmp
+
+# === Render / Vercel / deployment ===
+.vercel/
+.render/
+Procfile
+
+# === Optional - keep clean commits ===
+npm-debug.log*
+yarn-error.log*

@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const chalk = require("chalk");
+const chalk = require("chalk"); // version 4.1.2 (CommonJS)
 
 const logsDir = path.join(__dirname, "logs");
 if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir);
@@ -22,9 +22,10 @@ function cleanOldLogs() {
   }
 }
 
-function writeLog(type, message, colorFn) {
+function writeLog(type, message, colorFn = chalk.gray) {
   const timestamp = new Date().toISOString();
   const logLine = `[${timestamp}] [${type}] ${message}\n`;
+
   fs.appendFileSync(getLogPath(), logLine, "utf8");
   console.log(colorFn(`[${type}] ${message}`));
 }
