@@ -13,11 +13,9 @@ function loadEvents(client) {
       const event = require(path.join(folder, file));
       if (event.once)
         client.once(event.name, (...args) => event.execute(...args, client));
-      else
-        client.on(event.name, (...args) => event.execute(...args, client));
+      else client.on(event.name, (...args) => event.execute(...args, client));
     }
   }
-
   console.log("✅ Events loaded.");
 }
 
