@@ -1,26 +1,30 @@
-// commands/fun/snipe.js
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("snipe")
-    .setDescription("Show the last deleted message in this channel"),
+    .setDescription("Shows the last deleted message in this channel.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 
-  async execute(interaction) {
-    const data = interaction.client.snipeCache?.get(interaction.channel.id);
+  async execute(interaction, client) {
+    const data = client.snipeCache?.get(interaction.channel.id);
+
     if (!data)
-      return interaction.reply({ content: "❌ No deleted message in the last 5 minutes.", ephemeral: true });
+      return interaction.reply({
+        content: "⚠️ No deleted messages found in the last 5 minutes.",
+        ephemeral: true,
+      });
 
     const embed = new EmbedBuilder()
       .setColor("#00BFFF")
-      .setTitle("🕵️ Last Deleted Message")
+      .setTitle("💬 Sniped Message")
       .addFields(
-        { name: "👤 Author", value: data.author, inline: false },
-        { name: "💬 Message", value: data.content, inline: false }
+        { name: "👤 Author", value: data.author, inline: true },
+        { name: "🕒 Deleted", value: `<t:${Math.floor(data.time / 1000)}:R>`, inline: true }
       )
-      .setFooter({ text: "Stored for 5 minutes" })
-      .setTimestamp();
+      .setDescription(`> ${data.content}`)
+      .setFooter({ text: "Saved for 5 minutes only." });
 
-    await interaction.reply({ embeds: [embed], ephemeral: false });
+    await interaction.reply({ embeds: [embed] });
   },
 };
