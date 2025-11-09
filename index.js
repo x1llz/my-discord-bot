@@ -28,7 +28,7 @@ client.commands = new Collection();
 // === LOADERS ===
 (async () => {
   try {
-    await loadCommands(client);
+    await loadCommands(client); // ← await obligatoire ici
     loadEvents(client);
   } catch (err) {
     logger.error(`Handler error: ${err.stack}`);
@@ -37,18 +37,18 @@ client.commands = new Collection();
 
 // === READY EVENT ===
 client.once("ready", async () => {
-  logger.info(`Logged in as ${client.user.tag}`);
+  logger.info(`✅ Logged in as ${client.user.tag}`);
   client.user.setActivity("/help | .gg/hellz", { type: ActivityType.Playing });
 
   // === AUTOMOD SETUP ===
-  const guildId = process.env.GUILD_ID || "1424695601727017141"; // Default guild
+  const guildId = process.env.GUILD_ID || "1424695601727017141"; // default guild
   const guild = client.guilds.cache.get(guildId);
 
   try {
-    if (!guild) return logger.warn("Guild not found for AutoMod setup.");
+    if (!guild) return logger.warn("⚠️ Guild not found for AutoMod setup.");
 
     const existingRules = await guild.autoModerationRules.fetch();
-    if (existingRules.some((r) => r.name === "Hellz AutoMod")) {
+    if (existingRules.some(r => r.name === "Hellz AutoMod")) {
       logger.info("💬 AutoMod already active.");
     } else {
       await guild.autoModerationRules.create({
@@ -66,9 +66,8 @@ client.once("ready", async () => {
 });
 
 // === INTERACTION HANDLER ===
-client.on("interactionCreate", async (interaction) => {
+client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
-
   const command = client.commands.get(interaction.commandName);
   if (!command) return;
 
@@ -81,17 +80,13 @@ client.on("interactionCreate", async (interaction) => {
     );
   } catch (err) {
     logger.error(`Command error (${interaction.commandName}): ${err.message}`);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: "⚠️ Something went wrong executing this command.",
-        ephemeral: true,
-      });
-    } else {
-      await interaction.reply({
-        content: "⚠️ Something went wrong executing this command.",
-        ephemeral: true,
-      });
-    }
+    const reply = {
+      content: "⚠️ Something went wrong executing this command.",
+      ephemeral: true,
+    };
+    if (interaction.replied || interaction.deferred)
+      await interaction.followUp(reply);
+    else await interaction.reply(reply);
   }
 });
 

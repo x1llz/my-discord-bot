@@ -1,38 +1,24 @@
 const fs = require("fs");
 const path = require("path");
 
-module.exports = (client) => {
-  const baseDir = path.join(__dirname, "../events");
+function loadEvents(client) {
+  const eventsDir = path.join(__dirname, "../events");
 
-  if (!fs.existsSync(baseDir)) {
-    console.error("❌ No events directory found.");
-    return;
-  }
-
-  const categories = fs.readdirSync(baseDir);
+  const categories = fs.readdirSync(eventsDir);
   for (const category of categories) {
-    const folderPath = path.join(baseDir, category);
-    if (!fs.statSync(folderPath).isDirectory()) continue;
+    const folder = path.join(eventsDir, category);
+    const files = fs.readdirSync(folder).filter(f => f.endsWith(".js"));
 
-    const files = fs.readdirSync(folderPath).filter(f => f.endsWith(".js"));
     for (const file of files) {
-      const eventPath = path.join(folderPath, file);
-      try {
-        const event = require(eventPath);
-
-        if (!event || !event.name || typeof event.execute !== "function") {
-          console.warn(`⚠️ Skipped event ${file} (missing name or execute).`);
-          continue;
-        }
-
-        const bind = (...args) => event.execute(...args, client);
-        if (event.once) client.once(event.name, bind);
-        else client.on(event.name, bind);
-      } catch (err) {
-        console.error(`❌ Error loading event ${file}:`, err);
-      }
+      const event = require(path.join(folder, file));
+      if (event.once)
+        client.once(event.name, (...args) => event.execute(...args, client));
+      else
+        client.on(event.name, (...args) => event.execute(...args, client));
     }
   }
 
-  console.log("✅ All events successfully loaded.");
-};
+  console.log("✅ Events loaded.");
+}
+
+module.exports = { loadEvents };

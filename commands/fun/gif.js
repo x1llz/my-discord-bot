@@ -1,36 +1,51 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const fetch = require("node-fetch");
+
+// ✅ Compatible avec CommonJS
+const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("gif")
-    .setDescription("Send a random GIF based on your search")
-    .addStringOption(opt =>
-      opt.setName("query").setDescription("GIF topic").setRequired(true)
+    .setDescription("Search for a random GIF using a keyword.")
+    .addStringOption((option) =>
+      option
+        .setName("query")
+        .setDescription("Keyword to search for a GIF (e.g. anime, cat, meme)")
+        .setRequired(true)
     ),
 
   async execute(interaction) {
     const query = interaction.options.getString("query");
-    await interaction.deferReply();
+    const apiKey = process.env.TENOR_KEY;
+
+    if (!apiKey)
+      return interaction.reply({
+        content: "⚠️ The TENOR API key is missing in `.env`.",
+        ephemeral: true,
+      });
 
     try {
-      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(query)}&limit=25&rating=pg`);
+      const res = await fetch(
+        `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=${apiKey}&limit=10`
+      );
       const data = await res.json();
 
-      if (!data.data.length)
-        return interaction.editReply({ content: "❌ No GIFs found.", ephemeral: true });
+      if (!data.results || data.results.length === 0)
+        return interaction.reply({ content: "❌ No GIFs found for that query.", ephemeral: true });
 
-      const gif = data.data[Math.floor(Math.random() * data.data.length)].images.original.url;
+      const random = data.results[Math.floor(Math.random() * data.results.length)];
+      const gifUrl = random.media_formats?.gif?.url || random.url;
 
       const embed = new EmbedBuilder()
+        .setTitle(`🎞️ GIF: ${query}`)
+        .setImage(gifUrl)
         .setColor("#00BFFF")
-        .setTitle(`🎬 Random GIF for "${query}"`)
-        .setImage(gif)
-        .setFooter({ text: `Requested by ${interaction.user.tag}` });
+        .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() });
 
-      await interaction.editReply({ embeds: [embed] });
-    } catch {
-      await interaction.editReply({ content: "⚠️ Error while fetching GIF.", ephemeral: true });
+      await interaction.reply({ embeds: [embed] });
+    } catch (err) {
+      console.error("❌ GIF fetch error:", err);
+      await interaction.reply({ content: "⚠️ Failed to fetch GIFs.", ephemeral: true });
     }
   },
 };
